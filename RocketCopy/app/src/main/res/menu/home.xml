@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:id="@+id/selection_group"
+        android:visible="false">
+        <item
+            android:id="@+id/action_delete"
+            android:title="Delete"
+            app:showAsAction="always|withText" />
+    </group>
+    <group android:id="@+id/default_group"
+        android:visible="true">
+        <item
+            android:id="@+id/action_sortBy"
+            android:enabled="false"
+            android:orderInCategory="100"
+            android:title="@string/sort_by"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_new_sort"
+            android:orderInCategory="110"
+            android:title="@string/newest_to_oldest"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_old_sort"
+            android:orderInCategory="120"
+            android:title="@string/oldest_to_newest"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_actions"
+            android:enabled="false"
+            android:orderInCategory="130"
+            android:title="@string/actions"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_select"
+            android:orderInCategory="140"
+            android:title="@string/select"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_delete_all"
+            android:orderInCategory="150"
+            android:title="@string/delete_all"
+            app:showAsAction="never" />
+    </group>
+
+</menu>

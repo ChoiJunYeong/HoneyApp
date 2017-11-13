@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">RocketCopy</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="sort_by">Sort By</string>
+    <string name="newest_to_oldest">Newest to Oldest</string>
+    <string name="oldest_to_newest">Oldest to Newest</string>
+    <string name="actions">Actions</string>
+    <string name="select">Select</string>
+    <string name="delete_all">Delete All</string>
+    <string name="title_activity_destinations">Destinations</string>
+    <string name="destination1">Destination1</string>
+    <string name="address1">Address1</string>
+    <string name="title_activity_focusing_image">FocusingImage</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+
+</resources>
