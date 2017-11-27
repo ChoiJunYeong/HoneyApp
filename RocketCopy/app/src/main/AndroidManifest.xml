@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".HomeActivity"
+            android:name=".SchedulerActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -23,6 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".HomeActivity" />
         <activity android:name=".DestinationsActivity" />
         <activity android:name=".DestSettingActivity" />
         <activity android:name=".DestChooseActivity" />
@@ -30,7 +31,8 @@
         <activity android:name=".FocusImage" />
         <activity
             android:name=".FocusingImage"
-            android:label="@string/title_activity_focusing_image"></activity>
+            android:label="@string/title_activity_focusing_image" />
+        <activity android:name=".ScheduleAddActivity"></activity>
     </application>
 
 </manifest>
