@@ -28,44 +28,25 @@
                 android:id="@+id/CancleDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/plusButton"
-                android:layout_toStartOf="@+id/deleteButton2"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/DeleteConfirm"
+                android:onClick="setNormalMode"
                 android:text="취소"
                 android:textColor="@color/black"
                 android:textSize="30sp"
-                android:visibility="invisible"
-                android:onClick="setNormalMode"/>
+                android:visibility="invisible" />
 
             <TextView
                 android:id="@+id/DeleteConfirm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/plusButton"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="11dp"
+                android:layout_centerVertical="true"
+                android:onClick="confirmDelete"
                 android:text="삭제"
                 android:textColor="@color/black"
                 android:textSize="30sp"
-                android:visibility="invisible"
-                android:onClick="confirmDelete"/>
-
-            <ImageButton
-                android:id="@+id/deleteButton2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toLeftOf="@+id/plusButton"
-                android:background="@color/pure"
-                android:onClick="onDeleteSchedule"
-                app:srcCompat="@drawable/ic_menu_delete" />
-
-            <ImageButton
-                android:id="@+id/plusButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignEnd="@id/toolbar_scheduler"
-                android:onClick="addSchedule"
-                android:background="@color/pure"
-                app:srcCompat="@drawable/ic_menu_add" />
+                android:visibility="invisible" />
 
         </RelativeLayout>
 

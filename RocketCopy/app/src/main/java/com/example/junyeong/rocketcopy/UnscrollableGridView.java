@@ -2,6 +2,7 @@ package com.example.junyeong.rocketcopy;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 
@@ -33,4 +34,5 @@ public class UnscrollableGridView extends GridView {
         ViewGroup.LayoutParams params = getLayoutParams();
         params.height = getMeasuredHeight();
     }
+
 }

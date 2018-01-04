@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Environment;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
@@ -14,6 +16,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,12 +46,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-public class SchedulerActivity extends AppCompatActivity {
+public class SchedulerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
     UnscrollableGridView schedule;
     SchedulerAdapter adapter;
     ArrayList<String> deleteFiles = new ArrayList<>();
@@ -56,6 +62,7 @@ public class SchedulerActivity extends AppCompatActivity {
     File myDir = new File(filepath);
     ActionBarDrawerToggle toggle;
     static int week = 8;
+    private Menu menu;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,12 +80,22 @@ public class SchedulerActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         makeToggle(toolbar);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-
+        navigationView.setNavigationItemSelectedListener(this);
 
         scheduleHashMap = getScheduleList();
         loadScheduler();
         setScheduleTextView(scheduleHashMap);
 
+        FloatingActionButton fab = findViewById(R.id.camera2);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
+                intent.putExtra("Directory",filepath);
+                startActivityForResult(intent,2);
+
+            }
+        });
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -108,6 +125,106 @@ public class SchedulerActivity extends AppCompatActivity {
         toggle.syncState();
 
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.scheduler, menu);
+        this.menu = menu;
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()){
+            case R.id.action_add:
+                addSchedule();
+                break;
+            case R.id.action_delete:
+                onDeleteSchedule();
+                break;
+            case R.id.action_modify:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    //click nav bar
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        if (id == R.id.nav_scheduler) {
+            createView("Schedule");
+            menu.setGroupVisible(R.id.default_group,true);
+        }
+        else if (id == R.id.nav_destinations) {
+            createView("Destinations");
+            menu.setGroupVisible(R.id.default_group,false);
+
+        }
+        else if (id == R.id.nav_settings) {
+            createView("Settings");
+            menu.setGroupVisible(R.id.default_group,false);
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.scheduler_home);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+    //on navigation click
+    void createView(String view){
+
+        //기존 레이아웃 컨텐츠를 삭제
+        RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
+        scheduleParentLayout.setVisibility(View.INVISIBLE);
+        LinearLayout otherviewLayout = findViewById(R.id.otherviewLayout);
+        otherviewLayout.removeAllViews();
+
+            /*변경하고 싶은 레이아웃의 파라미터 값을 가져 옴*/
+        RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) otherviewLayout.getLayoutParams();
+
+            /*해당 margin값 변경*/
+        plControl.topMargin = getStatusBarSize();
+
+            /*변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅*/
+        otherviewLayout.setLayoutParams(plControl);
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+
+
+        if(view == "Destinations"){
+
+            RelativeLayout destinationsActivity = (RelativeLayout) inflater.inflate(R.layout.activity_destinations, null);
+            View action_bar = (View) destinationsActivity.getChildAt(destinationsActivity.getChildCount()-1);
+            action_bar.setVisibility(View.GONE);
+            otherviewLayout.addView(destinationsActivity);
+
+            /*RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
+            relay1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });*/
+
+
+
+        }
+        else if(view == "Schedule"){
+            scheduleParentLayout.setVisibility(View.VISIBLE);
+            loadScheduler();
+        }
+
+        else if(view == "Settings"){
+            LinearLayout settingsActivity = (LinearLayout) inflater.inflate(R.layout.activity_settings, null);
+            otherviewLayout.addView(settingsActivity);
+        }
+
+    }
+
     //시간대나 강의명이 겹칠 때 에러만 띄우고 아무것도 하지 않는다
     public boolean isOverlapOther(String[] lectureInfo,HashMap<Integer[],String[]> data) {
         scheduleHashMap=getScheduleList();
@@ -324,22 +441,19 @@ public class SchedulerActivity extends AppCompatActivity {
         return TitleBarHeight;
     }
     //스케쥴 + 버튼을 누르면 활성화
-    public void addSchedule(View view){
+    public void addSchedule(){
         Intent intent = new Intent(getApplicationContext(),ScheduleAddActivity.class);
         startActivityForResult(intent,0);
     }
     //스케쥴 쓰레기통 버튼을 누르면 활성화
-    public void onDeleteSchedule(View view){
+    public void onDeleteSchedule(){
         RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
         //modify actionbar
         TextView cancle = findViewById(R.id.CancleDelete);
         cancle.setVisibility(View.VISIBLE);
         TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
         deleteconfirm.setVisibility(View.VISIBLE);
-        ImageButton addbutton = findViewById(R.id.plusButton);
-        ImageButton deletebutton = findViewById(R.id.deleteButton2);
-        addbutton.setVisibility(View.INVISIBLE);
-        deletebutton.setVisibility(View.INVISIBLE);
+        menu.setGroupVisible(R.id.default_group,false);
         //set textview clickable
         for(int i=1;i<scheduleParentLayout.getChildCount();i++){
             TextView textView = (TextView) scheduleParentLayout.getChildAt(i);
@@ -368,10 +482,7 @@ public class SchedulerActivity extends AppCompatActivity {
         cancle.setVisibility(View.INVISIBLE);
         TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
         deleteconfirm.setVisibility(View.INVISIBLE);
-        ImageButton addbutton = findViewById(R.id.plusButton);
-        ImageButton deletebutton = findViewById(R.id.deleteButton2);
-        addbutton.setVisibility(View.VISIBLE);
-        deletebutton.setVisibility(View.VISIBLE);
+        menu.setGroupVisible(R.id.default_group,true);
         //clear select list
         RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         for(int i=1;i<relativeLayout.getChildCount();i++){
@@ -513,12 +624,11 @@ public class SchedulerActivity extends AppCompatActivity {
 
             ScheduleItemView view = new ScheduleItemView(getApplicationContext());
             ScheduleItem item = items.get(position);
-            view.setTag(item.getTag());
             if(position<week){
                 view.setTag(days[position]);
             }
             else if(position%week==0){
-                String time = Integer.toString(position/week+8) + ":00";
+                String time = Integer.toString(position/week) + "교시";
                 view.setTag(time);
             }
             else if(position>=week){
