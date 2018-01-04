@@ -56,10 +56,11 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/button2"
+                android:id="@+id/defualtDestinationButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:onClick="checkDefualtDestination"
+                android:text="Destination Setting" />
         </LinearLayout>
 
         <TextView
@@ -77,22 +78,25 @@
             android:background="@drawable/border">
 
             <Button
-                android:id="@+id/button2"
+                android:id="@+id/AboutButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:onClick="showAbout"
+                android:text="About" />
 
             <Button
-                android:id="@+id/button5"
+                android:id="@+id/Tips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:onClick="showTips"
+                android:text="Tips" />
 
             <Button
-                android:id="@+id/button4"
+                android:id="@+id/ShowScanSettingButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:onClick="showScanSetting"
+                android:text="Scan setting" />
         </LinearLayout>
 
 </LinearLayout>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="schedule_width">50dp</dimen>
+    <dimen name="schedule_height_min">12.5dp</dimen>
+    <dimen name="schedule_height_hour">50dp</dimen>
+</resources>

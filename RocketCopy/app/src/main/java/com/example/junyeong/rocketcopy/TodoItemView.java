@@ -12,12 +12,11 @@ import android.widget.TextView;
 
 public class TodoItemView extends LinearLayout {
     TextView textView;
-    TodoItemView(Context context){
+    public TodoItemView(Context context){
         super(context);
         init(context);
     }
-
-    TodoItemView(Context context, AttributeSet attrs){
+    public TodoItemView(Context context, AttributeSet attrs){
         super(context,attrs);
         init(context);
     }
@@ -26,7 +25,7 @@ public class TodoItemView extends LinearLayout {
         inflater.inflate(R.layout.todo_item,this,true);
         textView = (TextView) findViewById(R.id.todo_text);
     }
-    public void setText(String text){
+    public void setTag(String text){
         textView.setText(text);
     }
 }

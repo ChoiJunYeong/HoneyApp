@@ -68,7 +68,6 @@ public class CustomGallery extends BaseAdapter {
     @Override
     public View getView(int index, View view, ViewGroup viewGroup)
     {
-        // TODO Auto-generated method stub
         ImageView i = new ImageView(mContext); // Gallery array에 들어갈 ImageView 생성
 
         // 이 부분에서부터 'options.inJustDecodeBounds=false'까지는

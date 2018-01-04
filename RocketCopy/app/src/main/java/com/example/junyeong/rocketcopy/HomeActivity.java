@@ -14,6 +14,7 @@ import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -37,6 +38,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -59,8 +61,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private Menu menu;
     History_gallery_Adapter adapter;
     File[] imageList;
-    String filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket/images";
-    File myDir = new File(filepath);
+    String filepath;
+    File myDir;
+    RelativeLayout currentLayout;
     static int Newest=1,Oldest=-1;
     int status=Newest;
     public List<String> selectedFiles= new ArrayList<String>();
@@ -70,6 +73,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        Intent intent = getIntent();
+        filepath = intent.getStringExtra("Directory") + "/images";
+        myDir = new File(filepath);
 //start of default job
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,7 +85,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
+                intent.putExtra("Directory",filepath);
                 startActivityForResult(intent,2);
+
             }
         });
         //menu toggle button make
@@ -168,14 +176,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         if (id == R.id.nav_history) {
             createView("History");
-            // Handle the camera action
+            menu.setGroupVisible(R.id.default_group,true);
         }
         else if (id == R.id.nav_destinations) {
             createView("Destinations");
+            menu.setGroupVisible(R.id.default_group,false);
 
         }
         else if (id == R.id.nav_settings) {
             createView("Settings");
+            menu.setGroupVisible(R.id.default_group,false);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -216,45 +226,39 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 
+
         if(view == "Destinations"){
-            LinearLayout destinationsActivity = (LinearLayout) inflater.inflate(R.layout.activity_destinations, null);
+            //remove floating camera button
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.camera);
+            fab.setVisibility(View.INVISIBLE);
+
+            RelativeLayout destinationsActivity = (RelativeLayout) inflater.inflate(R.layout.activity_destinations, null);
+            View action_bar = (View) destinationsActivity.getChildAt(destinationsActivity.getChildCount()-1);
+            action_bar.setVisibility(View.GONE);
             linearLayout.addView(destinationsActivity);
 
             RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
             relay1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(),DestSettingActivity.class);
-                    intent.putExtra("Activity_name","relay1");
-                    startActivity(intent);
+                    redefineDestination((RelativeLayout)view);
                 }
             });
 
-            RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
-            relay2.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(),DestSettingActivity.class);
-                    intent.putExtra("Activity_name","relay2");
-                    startActivity(intent);
-                }
-            });
 
-            RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
-            relay3.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(),DestSettingActivity.class);
-                    intent.putExtra("Activity_name","relay3");
-                    startActivity(intent);
-                }
-            });
+
         }
         else if(view == "History"){
+            //floating camera button
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.camera);
+            fab.setVisibility(View.VISIBLE);
             showHistory();
         }
 
         else if(view == "Settings"){
+            //remove floating camera button
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.camera);
+            fab.setVisibility(View.INVISIBLE);
             LinearLayout settingsActivity = (LinearLayout) inflater.inflate(R.layout.activity_settings, null);
             linearLayout.addView(settingsActivity);
         }
@@ -306,15 +310,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         gridView = (GridView) findViewById(R.id.gridView);
         adapter = new History_gallery_Adapter();
 
+        //check directory exists
+        if(!myDir.mkdirs())
+            if(!myDir.getParentFile().exists())
+                Toast.makeText(this,"Error" + myDir.getParent(),Toast.LENGTH_SHORT).show();
+        if(!myDir.mkdir())
+            if(!myDir.exists())
+                Toast.makeText(this,"Error" + myDir.toString(),Toast.LENGTH_SHORT).show();
+
+
         //make list
         if(myDir.length()!=0) {
             imageList = myDir.listFiles();
             imageList = sortImage(imageList);
             long len = imageList.length;
             String lenStr = Long.toString(len);
-            for(int i=1;i<imageList.length;i++) {
+            for(int i=0;i<imageList.length;i++) {
                 History_gallery item = new History_gallery();
-                item.setImg(BitmapFactory.decodeFile(imageList[i].getPath()));
+                item.setImg(resize(BitmapFactory.decodeFile(imageList[i].getPath())));
                 item.setTag(imageList[i].getName());
                 adapter.addItem(item);
             }
@@ -358,7 +371,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public Bitmap resize(Bitmap bitmap){
-        return Bitmap.createScaledBitmap(bitmap, 150, 150, false);
+        return Bitmap.createScaledBitmap(bitmap, 180, 150, false);
     }
 
     public void Oldest_to_Newest(View view){
@@ -569,7 +582,54 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         alertDialog.show();
     }
+    public void redefineDestination(RelativeLayout relativeLayout){
+        currentLayout = relativeLayout;
+        //alert dialog view setting
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        final EditText destEdit = new EditText(this);
+        final EditText addressEdit = new EditText(this);
+
+        TextView textView1 = (TextView) currentLayout.getChildAt(2);
+        TextView textView2 = (TextView) currentLayout.getChildAt(3);
+
+        destEdit.setText(textView1.getText());
+        addressEdit.setText(textView2.getText());
+
+        TextView textView11 = new TextView(this);
+        TextView textView22 = new TextView(this);
+        textView11.setText("Destination");
+        textView22.setText("Address");
+        linearLayout.addView(textView11);
+        linearLayout.addView(destEdit);
+        linearLayout.addView(textView22);
+        linearLayout.addView(addressEdit);
+
+        alert.setView(linearLayout);
+
+        //yes and no button listener
+        alert.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                TextView textView1 = (TextView) currentLayout.getChildAt(2);
+                TextView textView2 = (TextView) currentLayout.getChildAt(3);
+                textView1.setText(destEdit.getText());
+                textView2.setText(addressEdit.getText());
+            }
+
+        });
+        alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+
+        });
+        alert.show();
+    }
     public void share(View view){
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setType("text/plain");
@@ -582,5 +642,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 // Title of intent
         Intent chooser = Intent.createChooser(intent, "친구에게 공유하기");
         startActivity(chooser);
+    }
+//----------------------------------------------------------------------------------------------------------------
+    public void checkDefualtDestination(View view){
+        Intent intent = new Intent(getApplicationContext(),DestinationsActivity.class);
+        startActivity(intent);
+    }
+    public void showAbout(View view){
+        Intent intent = new Intent(getApplicationContext(),AboutActivity.class);
+        startActivity(intent);
+    }
+    public void showTips(View view){}
+    public void showScanSetting(View view){
+        Intent intent = new Intent(getApplicationContext(),ScanSettingActivity.class);
+        startActivity(intent);
     }
 }

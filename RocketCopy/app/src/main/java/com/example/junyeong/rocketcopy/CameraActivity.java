@@ -4,6 +4,7 @@ package com.example.junyeong.rocketcopy;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -30,12 +32,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class CameraActivity extends AppCompatActivity {
+    String filepath;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         //View create
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        /*Intent intent = getIntent();
+        filepath = intent.getStringExtra("Directory");
+        if(filepath==null)
+            filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket";*/
         //Camera setting
         final CameraSurfaceView cameraView = new CameraSurfaceView(getApplicationContext());
         FrameLayout previewFrame = (FrameLayout) findViewById(R.id.previewFrame);
@@ -50,11 +57,6 @@ public class CameraActivity extends AppCompatActivity {
                         try{
 
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data,0,data.length);
-                            /// / String outUriStr = MediaStore.Images.Media.insertImage(getContentResolver(),Environment.getExternalStorageDirectory().toString() + "/your/folder",IMAGE_FILE,"Captured Image using Camera.");
-                          //  if(outUriStr==null){
-                            //    Log.d("SampleCapture","Image insert failed.");
-                              //  return;
-                            //}
                                 SaveImage(bitmap);
                             camera.startPreview();
                         }
@@ -76,15 +78,16 @@ public class CameraActivity extends AppCompatActivity {
     }
     //save captured image where I want
     public void SaveImage(Bitmap bitmap){
-        String root = Environment.getExternalStorageDirectory().toString();
-        String filepath = root + "/app/rocket/images";
         File myDir = new File(filepath);
-        myDir.mkdirs();
+        if(!myDir.mkdirs())
+            if(!myDir.getParentFile().exists())
+                Toast.makeText(this,"Error",Toast.LENGTH_LONG).show();
         Date date = new Date();
-        String fname = date.getTime() +".jpg";
+        String fname = date.getTime() +".jpeg";
         File file = new File (myDir, fname);
 
-        if (file.exists ()) file.delete ();
+        if (file.exists())
+            file.delete();
 
         try {
             FileOutputStream out = new FileOutputStream(file);
@@ -106,6 +109,7 @@ public class CameraActivity extends AppCompatActivity {
     private class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Callback{
         private SurfaceHolder mHolder;
         private Camera camera = null;
+
         public CameraSurfaceView(Context context){
             super(context);
 

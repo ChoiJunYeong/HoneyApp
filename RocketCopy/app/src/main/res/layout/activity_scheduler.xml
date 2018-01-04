@@ -9,41 +9,45 @@
     tools:openDrawer="start">
 
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/ScrollTimeTable"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/todoList">
+        android:fillViewport="true">
 
-    </LinearLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/scheduleParentLayout">
-
-        <ToggleButton
-            android:id="@+id/scheduler_toggle"
+        <RelativeLayout
+            android:id="@+id/scheduleParentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:textOff="scheduler"
-            android:textOn="list" />
+            android:orientation="vertical">
 
-        <GridView
-            android:id="@+id/schedule"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:numColumns="8">
+            <com.example.junyeong.rocketcopy.UnscrollableGridView
+                android:id="@+id/schedule"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:numColumns="8">
 
-        </GridView>
-    </RelativeLayout>
+            </com.example.junyeong.rocketcopy.UnscrollableGridView>
+        </RelativeLayout>
+
+    </ScrollView>
 
 
     <include
         layout="@layout/app_bar_scheduler"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header_home"
+        app:menu="@menu/activity_scheduler_drawer">
+
+    </android.support.design.widget.NavigationView>
 
 </android.support.v4.widget.DrawerLayout>

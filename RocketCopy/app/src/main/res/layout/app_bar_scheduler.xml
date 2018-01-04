@@ -24,13 +24,38 @@
                 app:popupTheme="@style/AppTheme.PopupOverlay"
                 app:titleTextColor="@color/black" />
 
+            <TextView
+                android:id="@+id/CancleDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/plusButton"
+                android:layout_toStartOf="@+id/deleteButton2"
+                android:text="취소"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:visibility="invisible"
+                android:onClick="setNormalMode"/>
+
+            <TextView
+                android:id="@+id/DeleteConfirm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/plusButton"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="11dp"
+                android:text="삭제"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:visibility="invisible"
+                android:onClick="confirmDelete"/>
+
             <ImageButton
                 android:id="@+id/deleteButton2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toLeftOf="@+id/plusButton"
-                android:onClick="deleteSchedule"
                 android:background="@color/pure"
+                android:onClick="onDeleteSchedule"
                 app:srcCompat="@drawable/ic_menu_delete" />
 
             <ImageButton
@@ -49,5 +74,15 @@
 
 
     <include layout="@layout/content_home" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/camera2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:tint="@color/white"
+        app:backgroundTint="@color/OrangeHoney"
+        app:srcCompat="@android:drawable/ic_menu_camera" />
 
 </android.support.design.widget.CoordinatorLayout>
