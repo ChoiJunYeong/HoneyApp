@@ -4,10 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
     <color name="semi_white">#000F0F0F</color>
-    <color name="select">#22222200</color>
+    <color name="select">#AA0000FF</color>
     <color name="pure">#00FFFFFF</color>
-    <color name="Honey">#FFFF22</color>
-    <color name="OrangeHoney">#FFCC00</color>
 </resources>

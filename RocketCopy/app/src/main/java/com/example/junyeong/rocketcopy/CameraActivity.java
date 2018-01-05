@@ -65,15 +65,10 @@ public class CameraActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        //setting for exit
-        Intent intent = new Intent();
-        setResult(RESULT_CANCELED,intent);
+
 
     }
+
     //save captured image where I want
     public void SaveImage(Bitmap bitmap){
         String root = Environment.getExternalStorageDirectory().toString();

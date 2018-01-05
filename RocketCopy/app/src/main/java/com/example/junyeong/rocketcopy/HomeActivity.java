@@ -10,11 +10,9 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -23,7 +21,6 @@ import android.text.Layout;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -63,7 +60,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     File myDir = new File(filepath);
     static int Newest=1,Oldest=-1;
     int status=Newest;
-    public List<String> selectedFiles= new ArrayList<String>();
+    List<String> selectedFiles= new ArrayList<String>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -79,11 +76,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
-                startActivityForResult(intent,2);
+                startActivity(intent);
             }
         });
-        //menu toggle button make
-        makeToggle(toolbar);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -94,24 +95,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         showHistory();
 
     }
-    public void makeToggle(Toolbar toolbar){
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.getDrawerArrowDrawable().setColor(getResources().getColor(R.color.black));
-        toggle.syncState();
 
-    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         if(resultCode==RESULT_OK && requestCode == 1) {
             String imgPath = data.getStringExtra("filepath");
             File img = new File(imgPath);
             img.delete();
-            showHistory();
-        }
-        else if(resultCode==RESULT_CANCELED){
             showHistory();
         }
     }
@@ -144,6 +134,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 showHistory();
                 break;
             case R.id.action_old_sort:
+                Toast.makeText(this, String.valueOf(item.getItemId()),Toast.LENGTH_LONG).show();
                 status=Oldest;
                 showHistory();
                 break;
@@ -154,7 +145,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 setSelectMode();
                 break;
             case R.id.action_delete:
-                checkDelete_Select();
+                for(String element : selectedFiles){
+                    File file = new File(filepath,element);
+                    file.delete();
+                    showHistory();
+                }
+                selectedFiles.clear();
+                setNormalMode();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -312,7 +309,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             imageList = sortImage(imageList);
             long len = imageList.length;
             String lenStr = Long.toString(len);
-            for(int i=1;i<imageList.length;i++) {
+            for(int i=0;i<imageList.length;i++) {
                 History_gallery item = new History_gallery();
                 item.setImg(BitmapFactory.decodeFile(imageList[i].getPath()));
                 item.setTag(imageList[i].getName());
@@ -324,6 +321,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(getApplicationContext(),"click",Toast.LENGTH_SHORT).show();
                 TextView textView = findViewById(R.id.text);
                 String imgPath = textView.getText().toString();
                 File imgFile = new File (myDir, imgPath);
@@ -437,32 +435,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
-    public void checkDelete_Select(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete");
-        builder.setTitle("Are you sure you want to delete selected scan(s)?");
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                for(String element : selectedFiles){
-                    File file = new File(filepath,element);
-                    file.delete();
-                    showHistory();
-                }
-                selectedFiles.clear();
-                setNormalMode();
-            }
-        });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                return;
-            }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
     public void deleteDirectoryChild(File folder){
         for(File child : folder.listFiles()){
             child.delete();
@@ -470,24 +442,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     public void setSelectMode(){
-        //swap toolbar setting
         menu.setGroupVisible(R.id.selection_group,true);
         menu.setGroupVisible(R.id.default_group,false);
         ImageButton imageButton = findViewById(R.id.goBackButton);
         imageButton.setVisibility(View.VISIBLE);
         toggle.setDrawerIndicatorEnabled(false);
-        LinearLayout linearLayout = findViewById(R.id.bottom_buttons);
-        linearLayout.setVisibility(View.VISIBLE);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.camera);
-        fab.setVisibility(View.INVISIBLE);
 
-        //toolbar title point setting
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
-        params.addRule(RelativeLayout.RIGHT_OF, R.id.goBackButton);
-        toolbar.setLayoutParams(params);
 
-        //make image selector normal
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -504,27 +465,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
     }
     public void setNormalMode(){
-        //swap setting
+
         menu.setGroupVisible(R.id.selection_group,false);
         menu.setGroupVisible(R.id.default_group,true);
         ImageButton imageButton = findViewById(R.id.goBackButton);
         imageButton.setVisibility(View.INVISIBLE);
         toggle.setDrawerIndicatorEnabled(true);
-        LinearLayout linearLayout = findViewById(R.id.bottom_buttons);
-        linearLayout.setVisibility(View.INVISIBLE);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.camera);
-        fab.setVisibility(View.VISIBLE);
 
-        //make toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
-        params.removeRule(RelativeLayout.RIGHT_OF);
-        toolbar.setLayoutParams(params);
 
-        //set image select mode
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(getApplicationContext(),"click",Toast.LENGTH_SHORT).show();
                 TextView textView = findViewById(R.id.text);
                 String imgPath = textView.getText().toString();
                 File imgFile = new File (myDir, imgPath);
@@ -533,7 +485,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 startActivityForResult(intent,1);
             }
         });
-        //reset select file list
         selectedFiles.clear();
         for(int i=0;i<gridView.getChildCount();i++){
             View child = gridView.getChildAt(i);
@@ -542,45 +493,5 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
     public void goHome(View view){
         setNormalMode();
-    }
-    public void checkDelete(View view){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete Scan");
-        builder.setMessage("Are you sure you want to delete this scan?");
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                for(String element : selectedFiles){
-                    File file = new File(filepath,element);
-                    file.delete();
-                    showHistory();
-                }
-                selectedFiles.clear();
-                setNormalMode();
-            }
-        });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                return;
-            }
-        });
-        AlertDialog alertDialog = builder.create();
-
-        alertDialog.show();
-    }
-
-    public void share(View view){
-        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-        intent.setType("text/plain");
-// Set default text message
-// 카톡, 이메일, MMS 다 이걸로 설정 가능
-//String subject = "문자의 제목";
-        String text = "다른 앱에 공유하기";
-//intent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        intent.putExtra(Intent.EXTRA_TEXT, text);
-// Title of intent
-        Intent chooser = Intent.createChooser(intent, "친구에게 공유하기");
-        startActivity(chooser);
     }
 }

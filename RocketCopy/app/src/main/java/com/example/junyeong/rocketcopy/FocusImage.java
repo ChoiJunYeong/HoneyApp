@@ -49,17 +49,4 @@ public class FocusImage extends AppCompatActivity {
         alertDialog.show();
     }
 
-    public void share(View view){
-        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-        intent.setType("text/plain");
-// Set default text message
-// 카톡, 이메일, MMS 다 이걸로 설정 가능
-//String subject = "문자의 제목";
-        String text = "다른 앱에 공유하기";
-//intent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        intent.putExtra(Intent.EXTRA_TEXT, text);
-// Title of intent
-        Intent chooser = Intent.createChooser(intent, "친구에게 공유하기");
-        startActivity(chooser);
-    }
 }
