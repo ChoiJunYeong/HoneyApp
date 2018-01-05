@@ -237,8 +237,54 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             action_bar.setVisibility(View.GONE);
             linearLayout.addView(destinationsActivity);
 
+
+            //make buttons
             RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
             relay1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+            //make buttons
+            RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
+            relay2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
+            relay3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
+            relay4.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
+            relay5.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
+            relay6.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     redefineDestination((RelativeLayout)view);

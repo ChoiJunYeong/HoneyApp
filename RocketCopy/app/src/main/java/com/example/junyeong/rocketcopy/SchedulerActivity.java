@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -63,6 +64,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     ActionBarDrawerToggle toggle;
     static int week = 8;
     private Menu menu;
+    RelativeLayout currentLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -202,13 +204,59 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             action_bar.setVisibility(View.GONE);
             otherviewLayout.addView(destinationsActivity);
 
-            /*RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
+            //make buttons
+            RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
             relay1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     redefineDestination((RelativeLayout)view);
                 }
-            });*/
+            });
+            //make buttons
+            RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
+            relay2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
+            relay3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
+            relay4.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
+            relay5.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
+            //make buttons
+            RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
+            relay6.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+
 
 
 
@@ -224,7 +272,60 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         }
 
     }
+    //subfunction of createView
+    public void redefineDestination(RelativeLayout relativeLayout){
+        currentLayout = relativeLayout;
+        //alert dialog view setting
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        final EditText destEdit = new EditText(this);
+        final EditText addressEdit = new EditText(this);
+
+        TextView textView1 = (TextView) currentLayout.getChildAt(2);
+        TextView textView2 = (TextView) currentLayout.getChildAt(3);
+
+        destEdit.setText(textView1.getText());
+        addressEdit.setText(textView2.getText());
+
+        TextView textView11 = new TextView(this);
+        TextView textView22 = new TextView(this);
+        textView11.setText("Destination");
+        textView22.setText("Address");
+        linearLayout.addView(textView11);
+        linearLayout.addView(destEdit);
+        linearLayout.addView(textView22);
+        linearLayout.addView(addressEdit);
+
+        alert.setView(linearLayout);
+
+        //yes and no button listener
+        alert.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                TextView textView1 = (TextView) currentLayout.getChildAt(2);
+                TextView textView2 = (TextView) currentLayout.getChildAt(3);
+                textView1.setText(destEdit.getText());
+                textView2.setText(addressEdit.getText());
+            }
+
+        });
+        alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+
+        });
+        alert.show();
+    }
+    //subfunction of createView
+    public void checkDefualtDestination(View view){
+        Intent intent = new Intent(getApplicationContext(),DestinationsActivity.class);
+        startActivity(intent);
+    }
     //시간대나 강의명이 겹칠 때 에러만 띄우고 아무것도 하지 않는다
     public boolean isOverlapOther(String[] lectureInfo,HashMap<Integer[],String[]> data) {
         scheduleHashMap=getScheduleList();

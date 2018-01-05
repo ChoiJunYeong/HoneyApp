@@ -31,6 +31,8 @@ import java.util.Date;
 import java.io.File;
 import java.io.FileOutputStream;
 
+
+
 public class CameraActivity extends AppCompatActivity {
     String filepath;
     @Override
@@ -38,7 +40,7 @@ public class CameraActivity extends AppCompatActivity {
         //View create
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-
+        
         /*Intent intent = getIntent();
         filepath = intent.getStringExtra("Directory");
         if(filepath==null)

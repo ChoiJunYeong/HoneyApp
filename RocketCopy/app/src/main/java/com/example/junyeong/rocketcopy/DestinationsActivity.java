@@ -33,6 +33,7 @@ public class DestinationsActivity extends AppCompatActivity {
     String destination,address;
     String filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket";
     File myDir = new File(filepath);
+    DialogInterface dialogInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +80,50 @@ public class DestinationsActivity extends AppCompatActivity {
                 redefineDestination((RelativeLayout)view);
             }
         });
+        //make buttons
+        RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
+        relay2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                redefineDestination((RelativeLayout)view);
+            }
+        });
+
+        //make buttons
+        RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
+        relay3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                redefineDestination((RelativeLayout)view);
+            }
+        });
+
+        //make buttons
+        RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
+        relay4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                redefineDestination((RelativeLayout)view);
+            }
+        });
+
+        //make buttons
+        RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
+        relay5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                redefineDestination((RelativeLayout)view);
+            }
+        });
+
+        //make buttons
+        RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
+        relay6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                redefineDestination((RelativeLayout)view);
+            }
+        });
 
 
 
@@ -113,9 +158,36 @@ public class DestinationsActivity extends AppCompatActivity {
             oldid=id;
         }
     }
-
+    //destination setting alert show
     public void redefineDestination(RelativeLayout relativeLayout){
         currentLayout = relativeLayout;
+        //alert dialog selecting send type(email or drive)
+
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        RelativeLayout alertLayout = (RelativeLayout) inflater.inflate(R.layout.alert_select, null);
+        RelativeLayout googleDriveLayout = (RelativeLayout)alertLayout.getChildAt(0);
+        RelativeLayout emailLayout = (RelativeLayout)alertLayout.getChildAt(1);
+        googleDriveLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+              //  signIn();
+            }
+        });
+        emailLayout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                setMailAddress();
+                dialogInterface.dismiss();
+            }
+        });
+        alert.setView(alertLayout);
+        alert.create();
+        dialogInterface = alert.show();
+    }
+    //alert that modify email address
+    public void setMailAddress(){
+
         //alert dialog view setting
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
@@ -150,17 +222,27 @@ public class DestinationsActivity extends AppCompatActivity {
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
+                writejson(currentLayout.getContentDescription().charAt(0)-'0',destEdit.getText().toString(),addressEdit.getText().toString());
             }
 
         });
         alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
             }
 
         });
         alert.show();
+    }
+    //save destination information as json format
+    public void writejson(int num,String name,String address){
+        File jsonfile = new File(myDir,"destInfo.json");
+        if(!jsonfile.exists()){
+            JSONObject
+            for(int i=1;i<=6;i++){
+
+            }
+        }
     }
     //return status-bar size for getting layout offset
 //to understand
