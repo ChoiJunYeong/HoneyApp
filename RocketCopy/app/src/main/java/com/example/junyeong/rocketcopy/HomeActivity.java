@@ -50,6 +50,8 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -62,8 +64,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     History_gallery_Adapter adapter;
     File[] imageList;
     String filepath;
-    File myDir;
+    File rootDir,myDir;
     RelativeLayout currentLayout;
+    Utils utils = new Utils();
+    DialogInterface dialogInterface;
     static int Newest=1,Oldest=-1;
     int status=Newest;
     public List<String> selectedFiles= new ArrayList<String>();
@@ -76,6 +80,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = getIntent();
         filepath = intent.getStringExtra("Directory") + "/images";
         myDir = new File(filepath);
+        rootDir = new File(intent.getStringExtra("Directory"));
 //start of default job
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -236,62 +241,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             View action_bar = (View) destinationsActivity.getChildAt(destinationsActivity.getChildCount()-1);
             action_bar.setVisibility(View.GONE);
             linearLayout.addView(destinationsActivity);
-
-
-            //make buttons
-            RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
-            relay1.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-            //make buttons
-            RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
-            relay2.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
-            relay3.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
-            relay4.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
-            relay5.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
-            relay6.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-
+            setDestinationLayout();
 
         }
         else if(view == "History"){
@@ -311,6 +261,119 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void setDestinationLayout(){
+        RelativeLayout rootLayout = findViewById(R.id.destinations);
+        //set onclicklistener
+        int size = rootLayout.getChildCount();
+        for(int i=0;i<size;i++){
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            child.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+        }
+        //set textview according to json file
+        File jsonFile = new File(rootDir,"destInfo.json");
+        if(!jsonFile.exists())
+            return;
+        for(int i=0;i<size;i++){
+            try {
+                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+                TextView nameView =(TextView) child.getChildAt(2);
+                TextView addressView =(TextView) child.getChildAt(3);
+
+                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
+                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
+
+                nameView.setText((String)jsonChild.get("name"));
+                addressView.setText((String)jsonChild.get("address"));
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+    //destination setting alert show
+    public void redefineDestination(RelativeLayout relativeLayout){
+        currentLayout = relativeLayout;
+        //alert dialog selecting send type(email or drive)
+
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        RelativeLayout alertLayout = (RelativeLayout) inflater.inflate(R.layout.alert_select, null);
+        RelativeLayout googleDriveLayout = (RelativeLayout)alertLayout.getChildAt(0);
+        RelativeLayout emailLayout = (RelativeLayout)alertLayout.getChildAt(1);
+        googleDriveLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  signIn();
+            }
+        });
+        emailLayout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                setMailAddress();
+                dialogInterface.dismiss();
+            }
+        });
+        alert.setView(alertLayout);
+        alert.create();
+        dialogInterface = alert.show();
+    }
+    //alert that modify email address
+    public void setMailAddress(){
+
+        //alert dialog view setting
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        final EditText destEdit = new EditText(this);
+        final EditText addressEdit = new EditText(this);
+
+        TextView textView1 = (TextView) currentLayout.getChildAt(2);
+        TextView textView2 = (TextView) currentLayout.getChildAt(3);
+
+        destEdit.setText(textView1.getText());
+        addressEdit.setText(textView2.getText());
+
+        TextView textView11 = new TextView(this);
+        TextView textView22 = new TextView(this);
+        textView11.setText("Destination");
+        textView22.setText("Address");
+        linearLayout.addView(textView11);
+        linearLayout.addView(destEdit);
+        linearLayout.addView(textView22);
+        linearLayout.addView(addressEdit);
+
+        alert.setView(linearLayout);
+
+        //yes and no button listener
+        alert.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                TextView textView1 = (TextView) currentLayout.getChildAt(2);
+                TextView textView2 = (TextView) currentLayout.getChildAt(3);
+                textView1.setText(destEdit.getText());
+                textView2.setText(addressEdit.getText());
+                utils.writejson(myDir,
+                        currentLayout.getContentDescription().toString(),
+                        destEdit.getText().toString(),
+                        addressEdit.getText().toString());
+            }
+
+        });
+        alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+
+        });
+        alert.show();
+    }
 
 
     public class History_gallery_Adapter extends BaseAdapter {
@@ -627,54 +690,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog alertDialog = builder.create();
 
         alertDialog.show();
-    }
-    public void redefineDestination(RelativeLayout relativeLayout){
-        currentLayout = relativeLayout;
-        //alert dialog view setting
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-        LinearLayout linearLayout = new LinearLayout(this);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-
-        final EditText destEdit = new EditText(this);
-        final EditText addressEdit = new EditText(this);
-
-        TextView textView1 = (TextView) currentLayout.getChildAt(2);
-        TextView textView2 = (TextView) currentLayout.getChildAt(3);
-
-        destEdit.setText(textView1.getText());
-        addressEdit.setText(textView2.getText());
-
-        TextView textView11 = new TextView(this);
-        TextView textView22 = new TextView(this);
-        textView11.setText("Destination");
-        textView22.setText("Address");
-        linearLayout.addView(textView11);
-        linearLayout.addView(destEdit);
-        linearLayout.addView(textView22);
-        linearLayout.addView(addressEdit);
-
-        alert.setView(linearLayout);
-
-        //yes and no button listener
-        alert.setPositiveButton("OK",new DialogInterface.OnClickListener(){
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                TextView textView1 = (TextView) currentLayout.getChildAt(2);
-                TextView textView2 = (TextView) currentLayout.getChildAt(3);
-                textView1.setText(destEdit.getText());
-                textView2.setText(addressEdit.getText());
-            }
-
-        });
-        alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-
-        });
-        alert.show();
     }
     public void share(View view){
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);

@@ -4,6 +4,7 @@ package com.example.junyeong.rocketcopy;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +29,25 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.drive.CreateFileActivityOptions;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveClient;
+import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveResourceClient;
+import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.Task;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,16 +56,23 @@ import java.io.FileOutputStream;
 
 public class CameraActivity extends AppCompatActivity {
     String filepath;
+    Bitmap currentImage;
+    GoogleSignInClient googleSignInClient;
+    DriveResourceClient driveResourceClient;
+    DriveClient driveClient;
+    Boolean[] SendList = new Boolean[5];
+    final static int REQUEST_CODE_SIGN_IN=1;
+    final static int GOOGLE_DRIVE_SEND=1;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         //View create
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         
-        /*Intent intent = getIntent();
+        Intent intent = getIntent();
         filepath = intent.getStringExtra("Directory");
         if(filepath==null)
-            filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket";*/
+            filepath = Environment.getExternalStorageDirectory().toString() + "/honeyA";
         //Camera setting
         final CameraSurfaceView cameraView = new CameraSurfaceView(getApplicationContext());
         FrameLayout previewFrame = (FrameLayout) findViewById(R.id.previewFrame);
@@ -93,18 +121,22 @@ public class CameraActivity extends AppCompatActivity {
 
         try {
             FileOutputStream out = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
             out.flush();
             out.close();
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         //how to broadcast? it doesn't do anything
         sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                 Uri.parse("file://" + Environment.getExternalStorageDirectory())));
-        Toast.makeText(getApplicationContext(), filepath+"/"+fname, Toast.LENGTH_LONG).show();
+
+        SendList[GOOGLE_DRIVE_SEND]=true;
+        if(SendList[GOOGLE_DRIVE_SEND]) {
+            signIn();
+            currentImage = bitmap;
+            saveFileToDrive();
+        }
     }
 
 
@@ -146,4 +178,83 @@ public class CameraActivity extends AppCompatActivity {
             }
         }
     }
+
+
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CODE_SIGN_IN:
+                // Called after user is signed in.
+                if (resultCode == RESULT_OK) {
+                    GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                    //save login state id_token
+                    if (result.isSuccess()) {
+                        driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                        driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                    }
+
+                }
+                break;
+
+        }
+    }
+    //sign in googledrive
+    private void signIn() {
+        googleSignInClient = buildGoogleSignInClient();
+        startActivityForResult(googleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+    }
+    // Build a Google SignIn client.
+    private GoogleSignInClient buildGoogleSignInClient() {
+        GoogleSignInOptions signInOptions =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestScopes(Drive.SCOPE_FILE)
+                        .build();
+        return GoogleSignIn.getClient(this, signInOptions);
+    }
+    private void saveFileToDrive() {
+        // Start by creating a new contents, and setting a callback.
+        driveResourceClient
+                .createContents()
+                .continueWithTask(
+                        new Continuation<DriveContents, Task<Void>>() {
+                            @Override
+                            public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
+                                return createFileIntentSender(task.getResult(), currentImage);
+                            }
+                        });
+    }
+    private Task<Void> createFileIntentSender(DriveContents driveContents, Bitmap image) {
+        // Get an output stream for the contents.
+        OutputStream outputStream = driveContents.getOutputStream();
+        // Write the bitmap data from it.
+        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, bitmapStream);
+        try {
+            outputStream.write(bitmapStream.toByteArray());
+        } catch (IOException e) {
+            Toast.makeText(getApplicationContext(),"upload fail",Toast.LENGTH_LONG).show();
+        }
+        MetadataChangeSet metadataChangeSet =
+                new MetadataChangeSet.Builder()
+                        .setMimeType("image/jpeg")
+                        .setTitle("Android_Photo.jpeg")
+                        .build();
+        CreateFileActivityOptions createFileActivityOptions =
+                new CreateFileActivityOptions.Builder()
+                        .setInitialMetadata(metadataChangeSet)
+                        .setInitialDriveContents(driveContents)
+                        .build();
+        return driveClient
+                .newCreateFileActivityIntentSender(createFileActivityOptions)
+                .continueWith(
+                        new Continuation<IntentSender, Void>() {
+                            @Override
+                            public Void then(@NonNull Task<IntentSender> task) throws Exception {
+                                startIntentSender(task.getResult(), null, 0, 0, 0);
+                                return null;
+                            }
+                        });
+    }
+
 }

@@ -3,7 +3,12 @@ package com.example.junyeong.rocketcopy;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -11,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Layout;
 import android.util.JsonReader;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,139 +29,111 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.drive.CreateFileActivityOptions;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveClient;
+import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveResourceClient;
+import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.zip.Inflater;
 
 public class DestinationsActivity extends AppCompatActivity {
     RelativeLayout currentLayout;
     String destination,address;
-    String filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket";
+    String filepath = Environment.getExternalStorageDirectory().toString() + "/honeyA";
     File myDir = new File(filepath);
     DialogInterface dialogInterface;
+    Utils utils = new Utils();
 
+    GoogleSignInClient googleSignInClient;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+    static final int REQUEST_CODE_SIGN_IN = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_destinations);
-        //floating button setting
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.add);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //to add add work
-                RelativeLayout rootLayout =(RelativeLayout) findViewById(R.id.destinations);
-                int layoutNumber = rootLayout.getChildCount();
-                //define new layout
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                RelativeLayout newlayout = (RelativeLayout)inflater.inflate(R.layout.destination_item,null);
-                //new layout setting
-                TextView textView1 = (TextView) newlayout.getChildAt(2);
-                textView1.setText("Destination" + (layoutNumber+1));
-                TextView textView2 = (TextView) newlayout.getChildAt(3);
-                textView2.setText("Address" + (layoutNumber+1));
-                rootLayout.addView(newlayout);
-                //layout move to below
-                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) newlayout.getLayoutParams();
-                params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                params.addRule(RelativeLayout.BELOW,rootLayout.getChildAt(layoutNumber-1).getId());
-                newlayout.setLayoutParams(params);
-                setNewViewID(newlayout);
+        setDestinationLayout();
+        sharedPreferences = getSharedPreferences("honeyA", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
 
-                newlayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        redefineDestination((RelativeLayout)view);
-                    }
-                });
-
-            }
-        });
-        //make buttons
-        RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
-        relay1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-        //make buttons
-        RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
-        relay2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-
-        //make buttons
-        RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
-        relay3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-
-        //make buttons
-        RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
-        relay4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-
-        //make buttons
-        RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
-        relay5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-
-        //make buttons
-        RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
-        relay6.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                redefineDestination((RelativeLayout)view);
-            }
-        });
-
-
-
-        //move to under status-bar
-        relay1.setPadding(0,getStatusBarSize(),0,0);
 
     }
-    public void setNewViewID(RelativeLayout layout){
-        int id= layout.getId();
-        int oldid = 0;
-        while(findViewById(id)!=null)
-            id++;
-        layout.setId(id);
-        int childNum=layout.getChildCount();
-        for(int i=0;i<childNum;i++){
-            //set new id
-            View view = layout.getChildAt(i);
-            while(findViewById(id)!=null)
-                id++;
-            view.setId(id);
-            //position redefine
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
-            switch (i){
-                case 1:
-                    params.addRule(RelativeLayout.END_OF,oldid);
-                case 2:
-                    params.addRule(RelativeLayout.END_OF,oldid);
-                case 3:
-                    params.addRule(RelativeLayout.BELOW,oldid);
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CODE_SIGN_IN:
+                // Called after user is signed in.
+                if (resultCode == RESULT_OK) {
+                    GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                    //save login state id_token
+                    if (result.isSuccess()) {
+                        GoogleSignInAccount acct = result.getSignInAccount();
+                        String id_token = acct.getIdToken();
+                        editor.putString("GD_LOGIN", id_token);
+                        editor.commit();
+                    }
+
+                }
+                break;
+
+        }
+    }
+    public void setDestinationLayout(){
+        RelativeLayout rootLayout = findViewById(R.id.destinations);
+        //move to under status-bar
+        rootLayout.setPadding(0,getStatusBarSize(),0,0);
+        //set onclicklistener
+        int size = rootLayout.getChildCount();
+        for(int i=0;i<size;i++){
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            child.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+        }
+        //set textview according to json file
+        File jsonFile = new File(myDir,"destInfo.json");
+        if(!jsonFile.exists())
+            return;
+        for(int i=0;i<size;i++){
+            try {
+                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+                TextView nameView =(TextView) child.getChildAt(2);
+                TextView addressView =(TextView) child.getChildAt(3);
+
+                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
+                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
+
+                nameView.setText((String)jsonChild.get("name"));
+                addressView.setText((String)jsonChild.get("address"));
+
+            }catch (Exception e){
+                e.printStackTrace();
             }
-            view.setLayoutParams(params);
-            oldid=id;
         }
     }
     //destination setting alert show
@@ -171,7 +149,7 @@ public class DestinationsActivity extends AppCompatActivity {
         googleDriveLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-              //  signIn();
+                signIn();
             }
         });
         emailLayout.setOnClickListener(new View.OnClickListener(){
@@ -222,7 +200,10 @@ public class DestinationsActivity extends AppCompatActivity {
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
-                writejson(currentLayout.getContentDescription().charAt(0)-'0',destEdit.getText().toString(),addressEdit.getText().toString());
+                utils.writejson(myDir,
+                                currentLayout.getContentDescription().toString(),
+                                destEdit.getText().toString(),
+                                addressEdit.getText().toString());
             }
 
         });
@@ -234,18 +215,15 @@ public class DestinationsActivity extends AppCompatActivity {
         });
         alert.show();
     }
-    //save destination information as json format
-    public void writejson(int num,String name,String address){
-        File jsonfile = new File(myDir,"destInfo.json");
-        if(!jsonfile.exists()){
-            JSONObject
-            for(int i=1;i<=6;i++){
-
-            }
-        }
+    // Build a Google SignIn client.
+    private GoogleSignInClient buildGoogleSignInClient() {
+        GoogleSignInOptions signInOptions =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestScopes(Drive.SCOPE_FILE)
+                        .build();
+        return GoogleSignIn.getClient(this, signInOptions);
     }
     //return status-bar size for getting layout offset
-//to understand
     private int getStatusBarSize() {
         TypedValue tv = new TypedValue();
         int TitleBarHeight=0;
@@ -259,4 +237,11 @@ public class DestinationsActivity extends AppCompatActivity {
     public void goHome(View view){
         finish();
     }
+
+    //sign in googledrive
+    private void signIn() {
+        googleSignInClient = buildGoogleSignInClient();
+        startActivityForResult(googleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+    }
+
 }

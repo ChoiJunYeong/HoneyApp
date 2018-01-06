@@ -59,9 +59,11 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     ArrayList<String> deleteFiles = new ArrayList<>();
     Set<String> schedules = null;
     HashMap<Integer[],String[]> scheduleHashMap; // HashMap is [day,hour1,min1,hour2,min2], [lecture,professor,color]
-    String filepath = Environment.getExternalStorageDirectory().toString() + "/app/rocket";
+    String filepath = Environment.getExternalStorageDirectory().toString() + "/honeyA";
     File myDir = new File(filepath);
     ActionBarDrawerToggle toggle;
+    Utils utils = new Utils();
+    DialogInterface dialogInterface;
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
@@ -203,60 +205,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             View action_bar = (View) destinationsActivity.getChildAt(destinationsActivity.getChildCount()-1);
             action_bar.setVisibility(View.GONE);
             otherviewLayout.addView(destinationsActivity);
-
-            //make buttons
-            RelativeLayout relay1 = (RelativeLayout) findViewById(R.id.relay1);
-            relay1.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-            //make buttons
-            RelativeLayout relay2 = (RelativeLayout) findViewById(R.id.relay2);
-            relay2.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay3 = (RelativeLayout) findViewById(R.id.relay3);
-            relay3.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay4 = (RelativeLayout) findViewById(R.id.relay4);
-            relay4.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay5 = (RelativeLayout) findViewById(R.id.relay5);
-            relay5.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
-            //make buttons
-            RelativeLayout relay6 = (RelativeLayout) findViewById(R.id.relay6);
-            relay6.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redefineDestination((RelativeLayout)view);
-                }
-            });
-
+            setDestinationLayout();
 
 
 
@@ -272,9 +221,70 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         }
 
     }
-    //subfunction of createView
+    public void setDestinationLayout(){
+        RelativeLayout rootLayout = findViewById(R.id.destinations);
+        //set onclicklistener
+        int size = rootLayout.getChildCount();
+        for(int i=0;i<size;i++){
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            child.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+        }
+        //set textview according to json file
+        File jsonFile = new File(myDir,"destInfo.json");
+        if(!jsonFile.exists())
+            return;
+        for(int i=0;i<size;i++){
+            try {
+                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+                TextView nameView =(TextView) child.getChildAt(2);
+                TextView addressView =(TextView) child.getChildAt(3);
+
+                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
+                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
+
+                nameView.setText((String)jsonChild.get("name"));
+                addressView.setText((String)jsonChild.get("address"));
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+    //destination setting alert show
     public void redefineDestination(RelativeLayout relativeLayout){
         currentLayout = relativeLayout;
+        //alert dialog selecting send type(email or drive)
+
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        RelativeLayout alertLayout = (RelativeLayout) inflater.inflate(R.layout.alert_select, null);
+        RelativeLayout googleDriveLayout = (RelativeLayout)alertLayout.getChildAt(0);
+        RelativeLayout emailLayout = (RelativeLayout)alertLayout.getChildAt(1);
+        googleDriveLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  signIn();
+            }
+        });
+        emailLayout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                setMailAddress();
+                dialogInterface.dismiss();
+            }
+        });
+        alert.setView(alertLayout);
+        alert.create();
+        dialogInterface = alert.show();
+    }
+    //alert that modify email address
+    public void setMailAddress(){
+
         //alert dialog view setting
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
@@ -309,18 +319,22 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
+                utils.writejson(myDir,
+                        currentLayout.getContentDescription().toString(),
+                        destEdit.getText().toString(),
+                        addressEdit.getText().toString());
             }
 
         });
         alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
             }
 
         });
         alert.show();
     }
+
     //subfunction of createView
     public void checkDefualtDestination(View view){
         Intent intent = new Intent(getApplicationContext(),DestinationsActivity.class);
@@ -651,22 +665,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         dialog.show();
     }
     //change json file to string 'simply'
-    public String readJSON(File filename){
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(filename));
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-            while (line != null) {
-                sb.append(line);
-                line = br.readLine();
-            }
-            return sb.toString();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    //read json file and make it to hashmap. called when schedule added and app started
     public HashMap<Integer[],String[]> getScheduleList(){
         File[] directories = myDir.listFiles();
         HashMap<Integer[],String[]> result = new HashMap<>();
@@ -678,7 +676,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 for(File file : files)
                     if(file.toString().contains("timesheet.json")){
                         //decode json file, mapping <position,{lecture,professor,color}>
-                        String jsonStr = readJSON(file);
+                        String jsonStr = utils.readJSON(file);
                         try {
                             JSONObject jsonObject = new JSONObject(jsonStr);
                             JSONArray scheduleJsonArray = jsonObject.getJSONArray("schedule");
