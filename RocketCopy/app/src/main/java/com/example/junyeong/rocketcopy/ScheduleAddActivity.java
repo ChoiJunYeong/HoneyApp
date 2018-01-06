@@ -83,9 +83,6 @@ public class ScheduleAddActivity extends AppCompatActivity {
         //add relative layout
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.schedule_add_layout);
         RelativeLayout relativeLayout = (RelativeLayout)new RelativeLayout(this);
-        TextView textView;
-        RelativeLayout.LayoutParams params =
-                new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         //set spinner and textview
         relativeLayout = addSpinner(relativeLayout,R.array.array_days);
         relativeLayout = addSpinnerText(relativeLayout,"요일");
@@ -98,9 +95,24 @@ public class ScheduleAddActivity extends AppCompatActivity {
         relativeLayout = addSpinnerText(relativeLayout,"시");
         relativeLayout = addSpinner(relativeLayout,R.array.array_mins);
         relativeLayout = addSpinnerText(relativeLayout,"분");
+        //add delete button
+        ImageButton imageButton = new ImageButton(this);
+        imageButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_delete));
+        relativeLayout.addView(imageButton);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_END);
+        imageButton.setLayoutParams(params);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteLayout((RelativeLayout)view.getParent());
+            }
+        });
+
+
         //set to the view
         Button button = (Button) findViewById(R.id.add);
-        ViewGroup viewGroup = findViewById(R.id.schedule_add_layout);
+        ViewGroup viewGroup = (ViewGroup)linearLayout;
         viewGroup.removeView(button);
         linearLayout.addView(relativeLayout);
         viewGroup.addView(button);
@@ -110,9 +122,15 @@ public class ScheduleAddActivity extends AppCompatActivity {
         String[] ret = new String[5];
         for(int i=0;i<5;i++){
             Spinner sp = (Spinner) findViewById(i+id);
+            if(sp==null)
+                return null;
             ret[i] = sp.getSelectedItem().toString();
         }
         return ret;
+    }
+    public void deleteLayout(RelativeLayout view){
+        ViewGroup parent = (ViewGroup)view.getParent();
+        parent.removeView(view);
     }
     public boolean isValidTime(String[] lec_time){
         if(Integer.parseInt(lec_time[HOUR1])<Integer.parseInt(lec_time[HOUR2]))
@@ -138,16 +156,22 @@ public class ScheduleAddActivity extends AppCompatActivity {
             Toast.makeText(this,"Invaild input exists",Toast.LENGTH_SHORT).show();
             return;
         }
+
+        int removeCount=0;
         for(int i=1; i<=spinnum;i+=5){
             lec_time = resolveSpinners(i);
+            if(lec_time == null) {
+                removeCount++;
+                continue;
+            }
             if(!isValidTime(lec_time)){
                 return;
             }
-            intent.putExtra("Lecture"+Integer.toString(i/5+1),lec_time);
+            intent.putExtra("Lecture"+Integer.toString(i/5+1 - removeCount),lec_time);
         }
         intent.putExtra("Lecture_name",lecture_text);
         intent.putExtra("Lecture_professor",professor_text);
-        intent.putExtra("Lecture_size",spinnum/5);
+        intent.putExtra("Lecture_size",spinnum/5 - removeCount);
         setResult(RESULT_OK,intent);
         finish();
     }
