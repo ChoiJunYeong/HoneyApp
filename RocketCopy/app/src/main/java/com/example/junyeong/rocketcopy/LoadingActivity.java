@@ -51,7 +51,7 @@ public class LoadingActivity extends AppCompatActivity {
             }
         }
         else{
-            Intent intent= new Intent(getApplicationContext(),SchedulerActivity.class);
+            Intent intent= new Intent(getApplicationContext(),MainActivity.class);
             startActivity(intent);
         }
     }
@@ -62,7 +62,7 @@ public class LoadingActivity extends AppCompatActivity {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Intent intent= new Intent(getApplicationContext(),SchedulerActivity.class);
+                    Intent intent= new Intent(getApplicationContext(),MainActivity.class);
                     startActivity(intent);
 
                 } else {
