@@ -40,6 +40,7 @@ import android.widget.ToggleButton;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,6 +68,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
+    static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +98,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
                 intent.putExtra("Directory",filepath);
-                startActivityForResult(intent,2);
+                startActivityForResult(intent,CAMERA_ACTIVITY);
 
             }
         });
@@ -104,7 +106,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         //save 버튼을 눌렸을때
-        if(resultCode==RESULT_OK) {
+        if(requestCode == MODE_ADD&&resultCode==RESULT_OK) {
             //setTimeTable(data);
             HashMap<Integer[],String[]> newHashMap = getHashMap(data,true);
             setScheduleTextView(newHashMap);
@@ -113,7 +115,33 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             if(newHashMap!=null)
                 scheduleHashMap.putAll(newHashMap);
         }
-            //
+        if(requestCode == MODE_MODIFY&&resultCode==RESULT_OK){
+            //setTimeTable(data);
+            HashMap<Integer[],String[]> newHashMap = getHashMap(data,false);
+            String[] value = newHashMap.values().iterator().next();
+
+            ArrayList<Integer[]> removekeyset = new ArrayList<Integer[]>();
+            for(Integer[] key : scheduleHashMap.keySet()){
+                if(scheduleHashMap.get(key)[0].equals(value[0])){
+                    removekeyset.add(key);
+                }
+            }
+            for(Integer[] removeKey : removekeyset)
+                scheduleHashMap.remove(removeKey);
+            if(scheduleHashMap == null)
+                scheduleHashMap = new HashMap<>();
+            else
+                scheduleHashMap.putAll(newHashMap);
+            RelativeLayout rootlayout = findViewById(R.id.scheduleParentLayout);
+            for(int i=1;i<rootlayout.getChildCount();i++){
+                TextView textView = (TextView) rootlayout.getChildAt(i);
+                rootlayout.removeView(rootlayout.getChildAt(i));
+                i--;
+            }
+            setScheduleTextView(scheduleHashMap);
+            setModifyMode();
+        }
+        //
     }
     @Override
     public void onDestroy(){
@@ -149,6 +177,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 onDeleteSchedule();
                 break;
             case R.id.action_modify:
+                setModifyMode();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -246,7 +275,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
 
                 JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
                 JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
-
                 nameView.setText((String)jsonChild.get("name"));
                 addressView.setText((String)jsonChild.get("address"));
 
@@ -395,22 +423,22 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         return null;
     }
     //make hashMap from intent data
-    public HashMap<Integer[],String[]> getHashMap(Intent intent,boolean toAdded){
-        int[] colors = {Color.BLUE,Color.RED,Color.YELLOW,Color.CYAN,Color.GREEN,Color.MAGENTA}; //color list of scheduler
-        HashMap<Integer[],String[]> result = new HashMap<Integer[], String[]>();
+    public HashMap<Integer[],String[]> getHashMap(Intent intent,boolean toAdded) {
+        int[] colors = {Color.BLUE, Color.RED, Color.YELLOW, Color.CYAN, Color.GREEN, Color.MAGENTA}; //color list of scheduler
+        HashMap<Integer[], String[]> result = new HashMap<Integer[], String[]>();
 
         int hashmapsize;
-        if(scheduleHashMap==null)
-            hashmapsize=0;
+        if (scheduleHashMap == null)
+            hashmapsize = 0;
         else
             hashmapsize = scheduleHashMap.size();
-        String[] lectureInfo={intent.getStringExtra("Lecture_name"),intent.getStringExtra("Lecture_professor"),Integer.toString(colors[hashmapsize % colors.length])};
-        int size = intent.getIntExtra("Lecture_size",1);
+        String[] lectureInfo = {intent.getStringExtra("Lecture_name"), intent.getStringExtra("Lecture_professor"), Integer.toString(colors[(int)(Math.random()*colors.length)])};
+        int size = intent.getIntExtra("Lecture_size", 1);
         Integer[][] timedata = new Integer[size][5];
-        for(int i=1;i<=size;i++){
-            String[] timeInfoStr = intent.getStringArrayExtra("Lecture"+i);
-            Integer[] timeInfo = {0,Integer.parseInt(timeInfoStr[1]),Integer.parseInt(timeInfoStr[2]),Integer.parseInt(timeInfoStr[3]),Integer.parseInt(timeInfoStr[4])};
-            switch (timeInfoStr[0]){
+        for (int i = 1; i <= size; i++) {
+            String[] timeInfoStr = intent.getStringArrayExtra("Lecture" + i);
+            Integer[] timeInfo = {0, Integer.parseInt(timeInfoStr[1]), Integer.parseInt(timeInfoStr[2]), Integer.parseInt(timeInfoStr[3]), Integer.parseInt(timeInfoStr[4])};
+            switch (timeInfoStr[0]) {
                 case "월":
                     timeInfo[0] = 1;
                     break;
@@ -433,34 +461,32 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                     timeInfo[0] = 7;
                     break;
             }
-            result.put(timeInfo,lectureInfo);
-            timedata[i-1]=timeInfo;
+            result.put(timeInfo, lectureInfo);
+            timedata[i - 1] = timeInfo;
         }
-        if(toAdded) {
-            try {
-                if(isOverlapOther(lectureInfo,result)) {
-                    return null;
-                }
-                File subDir = new File(myDir, lectureInfo[0]);
-
-                //폴더 있는지 체크하고 만듫기
-                if (!subDir.mkdirs())
-                    if(!subDir.getParentFile().exists())
-                        Toast.makeText(this, "Error" + subDir.getParent(), Toast.LENGTH_SHORT).show();
-                if (!subDir.mkdir())
-                    if(!subDir.exists())
-                        Toast.makeText(this, "Error" + subDir.toString(), Toast.LENGTH_SHORT).show();
-
-                String jsonStr = jsonwriting(lectureInfo[0], lectureInfo[1],lectureInfo[2], size, timedata);
-                File jsonFile = new File(subDir, "timesheet.json");
-                FileWriter fileWriter = new FileWriter(jsonFile);
-
-                fileWriter.write(jsonStr);
-                fileWriter.flush();
-                fileWriter.close();
-            } catch (IOException e) {
-                Toast.makeText(this, "json save failed", Toast.LENGTH_SHORT).show();
+        try {
+            if (toAdded && isOverlapOther(lectureInfo, result)) {
+                return null;
             }
+            File subDir = new File(myDir, lectureInfo[0]);
+
+            //폴더 있는지 체크하고 만듫기
+            if (!subDir.mkdirs())
+                if (!subDir.getParentFile().exists())
+                    Toast.makeText(this, "Error" + subDir.getParent(), Toast.LENGTH_SHORT).show();
+            if (!subDir.mkdir())
+                if (!subDir.exists())
+                    Toast.makeText(this, "Error" + subDir.toString(), Toast.LENGTH_SHORT).show();
+
+            String jsonStr = jsonwriting(lectureInfo[0], lectureInfo[1], lectureInfo[2], size, timedata);
+            File jsonFile = new File(subDir, "timesheet.json");
+            FileWriter fileWriter = new FileWriter(jsonFile);
+
+            fileWriter.write(jsonStr);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            Toast.makeText(this, "json save failed", Toast.LENGTH_SHORT).show();
         }
         return result;
     }
@@ -558,7 +584,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     //스케쥴 + 버튼을 누르면 활성화
     public void addSchedule(){
         Intent intent = new Intent(getApplicationContext(),ScheduleAddActivity.class);
-        startActivityForResult(intent,0);
+        startActivityForResult(intent,MODE_ADD);
     }
     //스케쥴 쓰레기통 버튼을 누르면 활성화
     public void onDeleteSchedule(){
@@ -612,6 +638,30 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //set schedule
         scheduleHashMap = getScheduleList();
         setScheduleTextView(scheduleHashMap);
+    }
+    public void setModifyMode(){
+        //modify actionbar
+        TextView cancle = findViewById(R.id.CancleDelete);
+        cancle.setVisibility(View.VISIBLE);
+        TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
+        deleteconfirm.setVisibility(View.VISIBLE);
+        menu.setGroupVisible(R.id.default_group,false);
+        RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+        for(int i=1;i<relativeLayout.getChildCount();i++){
+            TextView textView = (TextView) relativeLayout.getChildAt(i);
+            textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(),ScheduleAddActivity.class);
+                    //put extras for load information
+                    TextView textView = (TextView)view;
+                    File file = new File(filepath,textView.getText().toString());
+                    String jsonstr = utils.readJSON(new File(file,"timesheet.json"));
+                    intent.putExtra("json Data",jsonstr);
+                    startActivityForResult(intent,MODE_MODIFY);
+                }
+            });
+        }
     }
     public void onConfirmDeleteResult(){
         //delete directory
@@ -683,13 +733,15 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                             String[] lectureInfo = {jsonObject.get("lecture").toString(),
                                     jsonObject.get("professor").toString(),
                                     jsonObject.get("color").toString()};
-                            JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(0);
-                            Integer[] timeInfo = {timeJsonInfo.getInt("day"),
-                                                timeJsonInfo.getInt("hour1"),
-                                                timeJsonInfo.getInt("min1"),
-                                                timeJsonInfo.getInt("hour2"),
-                                                timeJsonInfo.getInt("min2")};
-                            result.put(timeInfo,lectureInfo);
+                            for(int i=0; i<scheduleJsonArray.length();i++) {
+                                JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(i);
+                                Integer[] timeInfo = {timeJsonInfo.getInt("day"),
+                                        timeJsonInfo.getInt("hour1"),
+                                        timeJsonInfo.getInt("min1"),
+                                        timeJsonInfo.getInt("hour2"),
+                                        timeJsonInfo.getInt("min2")};
+                                result.put(timeInfo, lectureInfo);
+                            }
                         }catch (Exception e){
                             e.printStackTrace();
                         }

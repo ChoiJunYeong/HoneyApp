@@ -15,6 +15,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 public class ScheduleAddActivity extends AppCompatActivity {
@@ -27,6 +29,11 @@ public class ScheduleAddActivity extends AppCompatActivity {
         setContentView(R.layout.activity_schedule_add);
         LinearLayout linearLayout = findViewById(R.id.schedule_add_layout);
         addTime(linearLayout);
+        Intent intent = getIntent();
+        String jsonstr = intent.getStringExtra("json Data");
+        if(jsonstr != null){
+            decodeJson(jsonstr);
+        }
 
     }
     public RelativeLayout addSpinner(RelativeLayout relativeLayout,int Array_id){
@@ -175,4 +182,42 @@ public class ScheduleAddActivity extends AppCompatActivity {
         setResult(RESULT_OK,intent);
         finish();
     }
+
+    public void decodeJson(String jsonstr){
+        try {
+            //get lecture name and professor name
+            JSONObject jsonObject = new JSONObject(jsonstr);
+            JSONArray scheduleJsonArray = jsonObject.getJSONArray("schedule");
+            String[] lectureInfo = {jsonObject.get("lecture").toString(),
+                    jsonObject.get("professor").toString(),
+                    jsonObject.get("color").toString()};
+            //set textview for lecture name and professor name
+            TextView lectureTextView = findViewById(R.id.lecture);
+            TextView professorTextView = findViewById(R.id.professor);
+            lectureTextView.setText(lectureInfo[0]);
+            professorTextView.setText(lectureInfo[1]);
+            //remove layout(created at onCreate)
+            LinearLayout rootLayout = findViewById(R.id.schedule_add_layout);
+            RelativeLayout relativeLayout = (RelativeLayout)rootLayout.getChildAt(2);
+            deleteLayout(relativeLayout);
+            //spinners setting
+            for(int i=0; i<scheduleJsonArray.length();i++) {
+                //get time informations
+                JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(i);
+                Integer[] timeInfo = {timeJsonInfo.getInt("day")-1,
+                        timeJsonInfo.getInt("hour1")-9,
+                        timeJsonInfo.getInt("min1"),
+                        timeJsonInfo.getInt("hour2")-9,
+                        timeJsonInfo.getInt("min2")};
+                //set time informations
+                addTime(rootLayout);
+                RelativeLayout layout = (RelativeLayout) rootLayout.getChildAt(rootLayout.getChildCount()-2);
+                for(int j=0;j<5;j++){
+                    Spinner spinner = (Spinner)layout.getChildAt(j*2);
+                    spinner.setSelection(timeInfo[j]);
+                }
+            }
+        }catch (Exception e){ e.printStackTrace();}
+    }
 }
+

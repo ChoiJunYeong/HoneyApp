@@ -540,6 +540,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             return imageList;
         }
     }
+
     public void checkDelete_All(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete All");
@@ -692,18 +693,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         alertDialog.show();
     }
     public void share(View view){
+        ArrayList<Uri> files = new ArrayList<Uri>();
+        for(String element : selectedFiles)
+            files.add(Uri.parse((new File(filepath,element)).toString()));
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-        intent.setType("text/plain");
-// Set default text message
-// 카톡, 이메일, MMS 다 이걸로 설정 가능
-//String subject = "문자의 제목";
+        intent.setType("image/jpeg");
         String text = "다른 앱에 공유하기";
-//intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_STREAM, files);
         intent.putExtra(Intent.EXTRA_TEXT, text);
-// Title of intent
-        Intent chooser = Intent.createChooser(intent, "친구에게 공유하기");
+        Intent chooser = Intent.createChooser(intent, "이미지 공유하기");
         startActivity(chooser);
     }
+
+
 //----------------------------------------------------------------------------------------------------------------
     public void checkDefualtDestination(View view){
         Intent intent = new Intent(getApplicationContext(),DestinationsActivity.class);
