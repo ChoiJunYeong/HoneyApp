@@ -1,7 +1,11 @@
 {
     "logs": [
         {
-            "outputFile": "/home/junyeong/AndroidStudioProjects/RocketCopy/openCVLibrary340/build/intermediates/res/merged/androidTest/debug/values_values.arsc.flat",
+            "outputFile": "C:\\home\\junyeong\\AndroidStudioProjects\\RocketCopy\\openCVLibrary340\\build\\intermediates\\res\\merged\\androidTest\\debug\\values_values.arsc.flat",
+            "map": []
+        },
+        {
+            "outputFile": "C:\\Users\\study\\AndroidStudioProjects\\HoneyA\\RocketCopy\\openCVLibrary340\\build\\intermediates\\res\\merged\\androidTest\\debug\\values_values.arsc.flat",
             "map": []
         }
     ]
