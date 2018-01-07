@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -50,11 +52,30 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.drive.CreateFileActivityOptions;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveClient;
+import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveResourceClient;
+import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.Task;
+
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.security.acl.Group;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -70,6 +91,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     DialogInterface dialogInterface;
     static int Newest=1,Oldest=-1;
     int status=Newest;
+    static int IMAGE_FOCUS=1,REQUEST_IMAGE_CAPTURE = 2,REQUEST_CODE_SIGN_IN=3;
+    GoogleSignInClient googleSignInClient;
+    DriveResourceClient driveResourceClient;
+    DriveClient driveClient;
+    Bitmap currentImage;
+    Boolean[] SendList = new Boolean[5];
+    final static int GOOGLE_DRIVE_SEND=1;
     public List<String> selectedFiles= new ArrayList<String>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,9 +117,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
+                dispatchTakePictureIntent();
+                /*Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
                 intent.putExtra("Directory",filepath);
-                startActivityForResult(intent,2);
+                startActivityForResult(intent,2);*/
 
             }
         });
@@ -118,14 +147,32 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(resultCode==RESULT_OK && requestCode == 1) {
+        if(resultCode==RESULT_OK && requestCode == IMAGE_FOCUS) {
             String imgPath = data.getStringExtra("filepath");
             File img = new File(imgPath);
             img.delete();
             showHistory();
         }
+        else if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
+
+            Bundle extras = data.getExtras();
+            Bitmap image = (Bitmap) extras.get("data");
+            SaveImage(image);
+        }
         else if(resultCode==RESULT_CANCELED){
             showHistory();
+        }
+        else if(requestCode == REQUEST_CODE_SIGN_IN){
+            if (resultCode == RESULT_OK) {
+                GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                //save login state id_token
+                if (result.isSuccess()) {
+                    driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                    driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                    saveFileToDrive();
+                }
+
+            }
         }
     }
 
@@ -451,7 +498,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 File imgFile = new File (myDir, imgPath);
                 Intent intent = new Intent(getApplicationContext(), FocusImage.class);
                 intent.putExtra("file name",imgFile.toString());
-                startActivityForResult(intent,1);
+                startActivityForResult(intent,IMAGE_FOCUS);
             }
         });
 
@@ -651,7 +698,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 File imgFile = new File (myDir, imgPath);
                 Intent intent = new Intent(getApplicationContext(), FocusImage.class);
                 intent.putExtra("file name",imgFile.toString());
-                startActivityForResult(intent,1);
+                startActivityForResult(intent,IMAGE_FOCUS);
             }
         });
         //reset select file list
@@ -659,6 +706,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         for(int i=0;i<gridView.getChildCount();i++){
             View child = gridView.getChildAt(i);
             child.setBackgroundColor(getColor(R.color.pure));
+        }
+    }
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
     public void goHome(View view){
@@ -702,8 +755,92 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Intent chooser = Intent.createChooser(intent, "이미지 공유하기");
         startActivity(chooser);
     }
+    public void SaveImage(Bitmap bitmap){
+        File myDir = new File(filepath);
+        if(!myDir.mkdirs())
+            if(!myDir.getParentFile().exists())
+                Toast.makeText(this,"Error",Toast.LENGTH_LONG).show();
+        Date date = new Date();
+        String fname = date.getTime() +".jpeg";
+        File file = new File (myDir, fname);
 
+        if (file.exists())
+            file.delete();
 
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG,100, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //how to broadcast? it doesn't do anything
+        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                Uri.parse("file://" + Environment.getExternalStorageDirectory())));
+
+        SendList[GOOGLE_DRIVE_SEND]=true;
+        if(SendList[GOOGLE_DRIVE_SEND]) {
+            signIn();
+            currentImage = bitmap;
+        }
+    }
+    private void signIn() {
+        googleSignInClient = buildGoogleSignInClient();
+        startActivityForResult(googleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+    }
+    // Build a Google SignIn client.
+    private GoogleSignInClient buildGoogleSignInClient() {
+        GoogleSignInOptions signInOptions =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestScopes(Drive.SCOPE_FILE)
+                        .build();
+        return GoogleSignIn.getClient(this, signInOptions);
+    }
+    private void saveFileToDrive() {
+        // Start by creating a new contents, and setting a callback.
+        driveResourceClient
+                .createContents()
+                .continueWithTask(
+                        new Continuation<DriveContents, Task<Void>>() {
+                            @Override
+                            public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
+                                return createFileIntentSender(task.getResult(), currentImage);
+                            }
+                        });
+    }
+    private Task<Void> createFileIntentSender(DriveContents driveContents, Bitmap image) {
+        // Get an output stream for the contents.
+        OutputStream outputStream = driveContents.getOutputStream();
+        // Write the bitmap data from it.
+        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, bitmapStream);
+        try {
+            outputStream.write(bitmapStream.toByteArray());
+        } catch (IOException e) {
+            Toast.makeText(getApplicationContext(),"upload fail",Toast.LENGTH_LONG).show();
+        }
+        MetadataChangeSet metadataChangeSet =
+                new MetadataChangeSet.Builder()
+                        .setMimeType("image/jpeg")
+                        .setTitle("Android_Photo.jpeg")
+                        .build();
+        CreateFileActivityOptions createFileActivityOptions =
+                new CreateFileActivityOptions.Builder()
+                        .setInitialMetadata(metadataChangeSet)
+                        .setInitialDriveContents(driveContents)
+                        .build();
+        return driveClient
+                .newCreateFileActivityIntentSender(createFileActivityOptions)
+                .continueWith(
+                        new Continuation<IntentSender, Void>() {
+                            @Override
+                            public Void then(@NonNull Task<IntentSender> task) throws Exception {
+                                startIntentSender(task.getResult(), null, 0, 0, 0);
+                                return null;
+                            }
+                        });
+    }
 //----------------------------------------------------------------------------------------------------------------
     public void checkDefualtDestination(View view){
         Intent intent = new Intent(getApplicationContext(),DestinationsActivity.class);

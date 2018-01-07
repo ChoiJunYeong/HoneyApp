@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -68,7 +69,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
-    static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2;
+    static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2, REQUEST_IMAGE_CAPTURE = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,9 +97,10 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
+                dispatchTakePictureIntent();
+                /*Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
                 intent.putExtra("Directory",filepath);
-                startActivityForResult(intent,CAMERA_ACTIVITY);
+                startActivityForResult(intent,CAMERA_ACTIVITY);*/
 
             }
         });
@@ -753,6 +755,13 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         return result;
     }
 
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
     //adapter for grid
     public class SchedulerAdapter extends BaseAdapter {
         ArrayList<ScheduleItem> items = new ArrayList<ScheduleItem>();
