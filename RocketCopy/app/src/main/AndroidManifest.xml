@@ -31,12 +31,10 @@
         <activity android:name=".DestChooseActivity" />
         <activity android:name=".CameraActivity" />
         <activity android:name=".FocusImage" />
-        <activity
-            android:name=".FocusingImage"
-            android:label="@string/title_activity_focusing_image" />
         <activity android:name=".ScheduleAddActivity" />
         <activity android:name=".AboutActivity" />
-        <activity android:name=".ScanSettingActivity"></activity>
+        <activity android:name=".ScanSettingActivity" />
+        <activity android:name=".FileActivity"/>
     </application>
 
 </manifest>

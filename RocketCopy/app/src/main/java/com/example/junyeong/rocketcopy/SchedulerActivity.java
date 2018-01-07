@@ -681,7 +681,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //alert massage
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete Schedule");
-        builder.setTitle("Are you sure you want to delete?");
+        builder.setMessage("Are you sure you want to delete?");
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {

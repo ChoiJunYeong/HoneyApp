@@ -475,8 +475,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             /*변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅*/
         gridView.setLayoutParams(plControl);
 
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
     }
 
     public Bitmap resize(Bitmap bitmap){
