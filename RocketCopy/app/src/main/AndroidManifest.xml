@@ -25,6 +25,7 @@
         </activity>
         <activity android:name=".SchedulerActivity" />
         <activity android:name=".HomeActivity" />
+        <activity android:name=".MainActivity" />
         <activity android:name=".DestinationsActivity" />
         <activity android:name=".DestSettingActivity" />
         <activity android:name=".DestChooseActivity" />
