@@ -22,6 +22,7 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -116,7 +117,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         FilenameFilter jsonFilenameFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                if(name=="timesheet.json")
+                if(name.equals("timesheet.json"))
                     return true;
                 else
                     return false;
@@ -125,10 +126,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         FilenameFilter imageFilenameFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                if(name.contains(".jpeg"))
-                    return true;
-                else
-                    return false;
+                return name.contains(",jpeg");
             }
         };
         //set adapter and root layout
@@ -144,7 +142,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
                 folderItem.setFilenum(String.valueOf(imageFolder.listFiles(imageFilenameFilter).length));
                 folderItem.setFoldername(folder.getName());
                 //is item of scheduler
-                if (folder.listFiles(jsonFilenameFilter) != null) {
+                if (folder.listFiles(jsonFilenameFilter).length!=0) {
                     folderItem.setFoldertype(utils.SCHEDULE);
                 }
                 //isn't item of scheduler
