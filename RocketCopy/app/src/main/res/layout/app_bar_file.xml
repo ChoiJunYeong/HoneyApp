@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_toStartOf="@+id/DeleteConfirm"
+                android:layout_toStartOf="@+id/confirm"
                 android:onClick="setNormalMode"
                 android:text="취소"
                 android:textColor="@color/black"
@@ -47,13 +47,13 @@
                 android:visibility="invisible" />
 
             <TextView
-                android:id="@+id/DeleteConfirm"
+                android:id="@+id/confirm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:onClick="confirmDelete"
-                android:text="삭제"
+                android:onClick="onClickConfirm"
+                android:text="확인"
                 android:textColor="@color/black"
                 android:textSize="30sp"
                 android:visibility="invisible" />

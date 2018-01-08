@@ -4,9 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -22,14 +20,10 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 
@@ -40,10 +34,10 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     ActionBarDrawerToggle toggle;
     Menu menu;
     ArrayList<String> selectedFoldernames;
+    static final int REQUEST_ADD_FOLDER=0,REQUEST_MODIFY_FOLDER=REQUEST_ADD_FOLDER;
     int selectedColor = 0x222222;
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_file);
@@ -53,6 +47,14 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         loadFolders();
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch (requestCode) {
+            case REQUEST_ADD_FOLDER:
+                loadFolders();
+                break;
+        }
     }
     public void makeToggle(Toolbar toolbar){
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.file_home);
@@ -77,11 +79,14 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()){
             case R.id.action_add:
+                Intent intent = new Intent(getApplicationContext(),AddFolderActivity.class);
+                startActivityForResult(intent,REQUEST_ADD_FOLDER);
                 break;
             case R.id.action_delete:
                 setDeletemode();
                 break;
             case R.id.action_modify:
+                setModifyMode();
                 break;
             case R.id.action_loadscheduler:
                 break;
@@ -134,6 +139,8 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
             if (folder.isDirectory()) {
                 FolderItem folderItem = new FolderItem();
                 File imageFolder = new File(folder,"images");
+                if(imageFolder.listFiles()==null)
+                    continue;
                 folderItem.setFilenum(String.valueOf(imageFolder.listFiles(imageFilenameFilter).length));
                 folderItem.setFoldername(folder.getName());
                 //is item of scheduler
@@ -173,7 +180,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     public void setDeletemode(){
         //swap visible button and invisible button
         TextView textView1 = findViewById(R.id.CancleDelete);
-        TextView textView2 = findViewById(R.id.DeleteConfirm);
+        TextView textView2 = findViewById(R.id.confirm);
         textView1.setVisibility(View.VISIBLE);
         textView2.setVisibility(View.VISIBLE);
         ImageButton imageButton = findViewById(R.id.stateImageButton);
@@ -200,10 +207,34 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+    public void setModifyMode(){
+        //swap visible button and invisible button
+        ImageButton imageButton = findViewById(R.id.stateImageButton);
+        imageButton.setVisibility(View.INVISIBLE);
+        menu.setGroupVisible(R.id.default_group,false);
+        toggle.setDrawerIndicatorEnabled(false);
+        TextView confirmText = findViewById(R.id.confirm);
+        confirmText.setVisibility(View.VISIBLE);
+        //set selectmode
+        GridView rootLayout = findViewById(R.id.file_parent);
+        selectedFoldernames = new ArrayList<String>();
+        rootLayout.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                RelativeLayout relativeLayout = (RelativeLayout) ((ViewGroup)view).getChildAt(0);
+                TextView textView = (TextView)  relativeLayout.getChildAt(1);
+                String foldername = textView.getText().toString();
+                Intent intent = new Intent(getApplicationContext(),AddFolderActivity.class);
+                intent.putExtra("Directory",foldername);
+                startActivityForResult(intent,REQUEST_MODIFY_FOLDER);
+            }
+        });
+
+    }
     public void setNormalMode(View view){
         //swap visible button and invisible button
         TextView textView1 = findViewById(R.id.CancleDelete);
-        TextView textView2 = findViewById(R.id.DeleteConfirm);
+        TextView textView2 = findViewById(R.id.confirm);
         textView1.setVisibility(View.INVISIBLE);
         textView2.setVisibility(View.INVISIBLE);
         ImageButton imageButton = findViewById(R.id.stateImageButton);
@@ -231,6 +262,12 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         });
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+    public void onClickConfirm(View view){
+        if(selectedFoldernames.isEmpty())
+            setNormalMode(view);
+        else
+            confirmDelete(view);
     }
     public void onConfirmDeleteResult(){
         for(String foldername : selectedFoldernames){

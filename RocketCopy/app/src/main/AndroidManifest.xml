@@ -34,7 +34,8 @@
         <activity android:name=".ScheduleAddActivity" />
         <activity android:name=".AboutActivity" />
         <activity android:name=".ScanSettingActivity" />
-        <activity android:name=".FileActivity"/>
+        <activity android:name=".FileActivity" />
+        <activity android:name=".AddFolderActivity"></activity>
     </application>
 
 </manifest>

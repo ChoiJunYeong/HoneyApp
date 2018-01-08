@@ -20,38 +20,24 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.GridView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -594,7 +580,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //modify actionbar
         TextView cancle = findViewById(R.id.CancleDelete);
         cancle.setVisibility(View.VISIBLE);
-        TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
+        TextView deleteconfirm = findViewById(R.id.confirm);
         deleteconfirm.setVisibility(View.VISIBLE);
         menu.setGroupVisible(R.id.default_group,false);
         //set textview clickable
@@ -623,7 +609,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //modify actionbar
         TextView cancle = findViewById(R.id.CancleDelete);
         cancle.setVisibility(View.INVISIBLE);
-        TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
+        TextView deleteconfirm = findViewById(R.id.confirm);
         deleteconfirm.setVisibility(View.INVISIBLE);
         menu.setGroupVisible(R.id.default_group,true);
         //clear select list
@@ -645,8 +631,8 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //modify actionbar
         TextView cancle = findViewById(R.id.CancleDelete);
         cancle.setVisibility(View.VISIBLE);
-        TextView deleteconfirm = findViewById(R.id.DeleteConfirm);
-        deleteconfirm.setVisibility(View.VISIBLE);
+        TextView confirm = findViewById(R.id.confirm);
+        confirm.setVisibility(View.VISIBLE);
         menu.setGroupVisible(R.id.default_group,false);
         RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         for(int i=1;i<relativeLayout.getChildCount();i++){
@@ -806,84 +792,5 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 return true;
         }
     }
-
-    //list 형식의 스케쥴러
-    /*public void loadTodo() {
-        //set todo
-        schedule = (UnscrollableGridView) findViewById(R.id.schedule);
-        schedule.setNumColumns(1);
-        adapter2 = new TodoAdapter();
-        //remove textview
-        RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
-        int size = scheduleParentLayout.getChildCount();
-        for(int i=1;i<size;i++){
-            TextView textView =(TextView) scheduleParentLayout.getChildAt(i);
-            textView.setVisibility(View.INVISIBLE);
-        }
-
-        //set adapter item
-        File[] subDirList = myDir.listFiles();
-        TodoItem itemTitle = new TodoItem();
-        itemTitle.setTag("Time table");
-        adapter2.addItem(itemTitle);
-        if(subDirList!=null) {
-            for (int i = 0; i < subDirList.length; i++) {
-                if (subDirList[i].toString().contains(".")) {
-                    continue;
-                } else {
-                    TodoItem item = new TodoItem();
-                    item.setTag(subDirList[i].getName());
-                    adapter2.addItem(item);
-                }
-            }
-        }
-        schedule.setAdapter(adapter2);
-
-        schedule.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                //구현하기
-                ViewGroup viewGroup = (ViewGroup) view;
-                RelativeLayout relativeLayout = (RelativeLayout)viewGroup.getChildAt(0);
-                TextView textView = (TextView) relativeLayout.getChildAt(0);
-                if(view.getContentDescription()=="Title")
-                    return;
-                showItem(filepath +"/"+ (String)textView.getText());
-            }
-        });
-
-    }*/
-    //adapter for list
-    /*public class TodoAdapter extends BaseAdapter {
-        ArrayList<TodoItem> items = new ArrayList<TodoItem>();
-        @Override
-        public int getCount(){return items.size();}
-        @Override
-        public Object getItem(int arg){
-            return items.get(arg);
-        }
-        @Override
-        public long getItemId(int arg){
-            return arg;
-        }
-        public void addItem(TodoItem item){
-            items.add(item);
-        }
-        @Override
-        public View getView(int position, View oldView, ViewGroup parent){
-            TodoItemView view = new TodoItemView(getApplicationContext());
-            TodoItem item = items.get(position);
-            view.setTag(item.getTag());
-            if(position==0){
-                view.setContentDescription("Title");
-            }
-            return view;
-        }
-        @Override
-        public boolean isEnabled(int i){
-            return true;
-        }
-    }*/
-
 
 }
