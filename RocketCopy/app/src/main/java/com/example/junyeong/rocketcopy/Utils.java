@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 
 /**
  * Created by junyeong on 18. 1. 5.
@@ -25,9 +26,19 @@ import java.io.FileWriter;
 
 public class Utils {
     public int FOLDER,SCHEDULE;
+    FilenameFilter jsonFilenameFilter;
     Utils(){
         FOLDER=0;
         SCHEDULE=1;
+         jsonFilenameFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                if(name.equals("timesheet.json"))
+                    return true;
+                else
+                    return false;
+            }
+        };
     }
     //change json file to string 'simply'
     public String readJSON(File filename){

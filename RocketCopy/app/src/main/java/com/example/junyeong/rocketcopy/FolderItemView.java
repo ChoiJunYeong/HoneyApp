@@ -28,7 +28,7 @@ public class FolderItemView extends LinearLayout{
             inflater.inflate(R.layout.folder_item,this,true);
             folderName = (TextView) findViewById(R.id.folder_name);
             fileNum = (TextView) findViewById(R.id.file_num);
-            folderType = (ImageView) findViewById(R.id.folder_type);
+            folderType = (ImageView) findViewById(R.id.folder_icon);
 
         }
         public void setFolderName(String text){folderName.setText(text);}

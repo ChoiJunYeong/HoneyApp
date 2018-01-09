@@ -31,7 +31,7 @@
                 android:layout_alignStart="@+id/CancleDelete"
                 android:layout_alignTop="@+id/CancleDelete"
                 android:backgroundTint="@color/pure"
-                android:onClick="loadFolders_ver2"
+                android:onClick="swapViewMode"
                 app:srcCompat="@drawable/ic_folder_24dp" />
 
             <TextView
