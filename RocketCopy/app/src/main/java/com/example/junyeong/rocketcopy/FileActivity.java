@@ -99,15 +99,16 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        if (id == R.id.nav_scheduler) {
+        switch (item.getItemId()){
+            case R.id.nav_all_picture:
+                break;
+            case R.id.nav_scheduler:
+                break;
+            case R.id.nav_destinations:
+                break;
+            case R.id.nav_settings:
+                break;
         }
-        else if (id == R.id.nav_destinations) {
-
-        }
-        else if (id == R.id.nav_settings) {
-        }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.file_home);
         drawer.closeDrawer(GravityCompat.START);
         return true;

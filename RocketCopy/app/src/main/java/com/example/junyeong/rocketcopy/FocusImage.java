@@ -18,8 +18,12 @@ public class FocusImage extends AppCompatActivity {
     String imgPath;
     Bitmap img;
     ImageView imageView;
+    int REQUEST_MOVE_IMAGE=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //if image moved, finish activity
+        if(false)
+            finish();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_focus_image);
         //load image
@@ -71,7 +75,6 @@ public class FocusImage extends AppCompatActivity {
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
-
     public void share(View view){
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setType("image/jpeg");
@@ -80,5 +83,10 @@ public class FocusImage extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_TEXT, text);
         Intent chooser = Intent.createChooser(intent, "이미지 공유하기");
         startActivity(chooser);
+    }
+    public void moveItem(View view){
+        Intent intent = new Intent(getApplicationContext(),SchedulerActivity.class);
+        intent.putExtra("image2move",imgPath);
+    //    startActivityForResult(intent,REQUEST_MOVE_IMAGE);
     }
 }

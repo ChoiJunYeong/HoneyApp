@@ -34,12 +34,9 @@
         <activity android:name=".ScheduleAddActivity" />
         <activity android:name=".AboutActivity" />
         <activity android:name=".ScanSettingActivity" />
-<<<<<<< HEAD
         <activity android:name=".PictureListActivity"></activity>
-=======
         <activity android:name=".FileActivity" />
         <activity android:name=".AddFolderActivity"></activity>
->>>>>>> 01cc3ede5fcb954379ebe32cab2a6f62b5815d64
     </application>
 
 </manifest>

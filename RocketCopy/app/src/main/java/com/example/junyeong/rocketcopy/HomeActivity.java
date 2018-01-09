@@ -225,21 +225,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        if (id == R.id.nav_history) {
-            createView("History");
-            menu.setGroupVisible(R.id.default_group,true);
+        switch (item.getItemId()){
+            case R.id.nav_all_picture:
+                Intent intent = new Intent(getApplicationContext(),PictureListActivity.class);
+                startActivity(intent);
+            case R.id.nav_history:
+                createView("History");
+                menu.setGroupVisible(R.id.default_group,true);
+                break;
+            case R.id.nav_destinations:
+                createView("Destinations");
+                menu.setGroupVisible(R.id.default_group,false);
+                break;
+            case R.id.nav_settings:
+                createView("Settings");
+                menu.setGroupVisible(R.id.default_group,false);
+                break;
         }
-        else if (id == R.id.nav_destinations) {
-            createView("Destinations");
-            menu.setGroupVisible(R.id.default_group,false);
-
-        }
-        else if (id == R.id.nav_settings) {
-            createView("Settings");
-            menu.setGroupVisible(R.id.default_group,false);
-        }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
