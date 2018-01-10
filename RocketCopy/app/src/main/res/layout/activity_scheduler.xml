@@ -33,6 +33,32 @@
 
     </ScrollView>
 
+    <RelativeLayout
+        android:id="@+id/folder_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:id="@+id/up_down_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/folder_icon"
+            android:layout_alignParentStart="true"
+            android:onClick="folderShow"
+            app:srcCompat="@android:drawable/arrow_down_float" />
+
+        <GridView
+            android:id="@+id/folder_icon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/border"
+            android:gravity="bottom"
+            android:numColumns="4">
+
+        </GridView>
+    </RelativeLayout>
 
     <include
         layout="@layout/app_bar_scheduler"

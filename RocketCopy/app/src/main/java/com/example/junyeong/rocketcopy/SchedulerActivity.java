@@ -22,9 +22,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -202,6 +206,8 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         scheduleParentLayout.setVisibility(View.INVISIBLE);
         LinearLayout otherviewLayout = findViewById(R.id.otherviewLayout);
         otherviewLayout.removeAllViews();
+        GridView gridView = findViewById(R.id.folder_icon);
+        gridView.removeAllViews();
 
             /*변경하고 싶은 레이아웃의 파라미터 값을 가져 옴*/
         RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) otherviewLayout.getLayoutParams();
@@ -551,7 +557,72 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
 
         schedule.setAdapter(adapter);
 
+        loadFolders();
+    }
+    //folder list using gridview custom adapter
+    public void loadFolders(){
+        FolderIconAdapter iconAdapter = new FolderIconAdapter();
+        GridView gridView = findViewById(R.id.folder_icon);
+        for(File folder : myDir.listFiles()){
+            File timesheet = new File(folder,"/timesheet.json");
+            if(timesheet.exists())
+                continue;
+            FolderIconItem folderIconItem = new FolderIconItem();
+            folderIconItem.setTag(folder.getName());
+            iconAdapter.addItem(folderIconItem);
+        }
+        gridView.setAdapter(iconAdapter);
 
+        //set height
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)gridView.getLayoutParams();
+        if(adapter.getCount() != 0) {
+            View folderIconItem =  iconAdapter.getView(0, null, gridView);
+            folderIconItem.measure(0,0);
+            params.height = folderIconItem.getMeasuredHeight() * 2;
+        }
+        gridView.setLayoutParams(params);
+    }
+    //folders layout show or not
+    public void folderShow(View view){
+        //set animation
+        final GridView gridView = findViewById(R.id.folder_icon);
+        final float moveScale = gridView.getHeight() | -1*gridView.getPaddingBottom();
+        TranslateAnimation anim;
+        if(gridView.getPaddingBottom()==-(int)moveScale){
+            anim = new TranslateAnimation(0f, 0f, 0f, -moveScale);
+        }
+        else{
+            anim = new TranslateAnimation(0f, 0f, 0f, moveScale);
+        }
+        anim.setDuration(0);
+        gridView.setAnimation(anim);
+        view.startAnimation(anim);
+        //move view and change icon
+        final ImageButton imageButton = (ImageButton)view;
+        anim.setAnimationListener(new Animation.AnimationListener(){
+            @Override
+            public void onAnimationStart(Animation arg0) {
+            }
+            @Override
+            public void onAnimationRepeat(Animation arg0) {
+
+            }
+            @Override
+            public void onAnimationEnd(Animation arg0) {
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) gridView.getLayoutParams();
+                if(gridView.getPaddingBottom()==-(int)moveScale){
+                    params.height = (int)moveScale;
+                    gridView.setPadding(0,0,0,0);
+                    imageButton.setImageDrawable(getDrawable(R.drawable.arrow_down_float));
+                }
+                else {
+                    params.height=0;
+                    gridView.setPadding(0, 0, 0, -(int) moveScale);
+                    imageButton.setImageDrawable(getDrawable(R.drawable.arrow_up_float));
+                }
+                gridView.setLayoutParams(params);
+            }
+        });
     }
     //선택한 스케쥴의 폴더를 보여줌
     public void showItem(String folderName){
@@ -740,8 +811,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             return null;
         return result;
     }
-
-
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -792,5 +861,34 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 return true;
         }
     }
+    //adapter show all folders
+    public class FolderIconAdapter extends BaseAdapter {
+        ArrayList<FolderIconItem> items = new ArrayList<FolderIconItem>();
+        @Override
+        public int getCount(){return items.size();}
+        @Override
+        public Object getItem(int arg){
+            return items.get(arg);
+        }
+        @Override
+        public long getItemId(int arg){
+            return arg;
+        }
+        public void addItem(FolderIconItem item){
+            items.add(item);
+        }
+        @Override
+        public View getView(int position, View oldView, ViewGroup parent){
 
+            FolderIconItemView view = new FolderIconItemView(getApplicationContext());
+            FolderIconItem item = items.get(position);
+            view.setTag(item.getTag());
+            view.setImageView();
+            return view;
+        }
+        @Override
+        public boolean isEnabled(int i){
+            return true;
+        }
+    }
 }
