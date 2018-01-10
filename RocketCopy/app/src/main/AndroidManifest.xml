@@ -36,7 +36,8 @@
             android:label="@string/title_activity_focusing_image" />
         <activity android:name=".ScheduleAddActivity" />
         <activity android:name=".AboutActivity" />
-        <activity android:name=".ScanSettingActivity"></activity>
+        <activity android:name=".ScanSettingActivity" />
+        <activity android:name=".PictureListActivity"></activity>
     </application>
 
 </manifest>
