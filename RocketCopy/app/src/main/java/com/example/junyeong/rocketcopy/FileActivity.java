@@ -54,7 +54,10 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         switch (requestCode) {
             case REQUEST_ADD_FOLDER:
-                loadFolders();
+                if(state==MODE_FOLDER)
+                    loadFolders();
+                else
+                    loadFolderIconMode();
                 break;
         }
     }
@@ -119,13 +122,13 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
             ImageButton imageButton = findViewById(R.id.stateImageButton);
             imageButton.setImageDrawable(getDrawable(R.drawable.ic_dashboard_black_24dp));
             loadFolderIconMode();
-            state=MODE_FOLDERICON;
+            state^=1;
         }
         else{
             ImageButton imageButton = findViewById(R.id.stateImageButton);
             imageButton.setImageDrawable(getDrawable(R.drawable.ic_folder_24dp));
             loadFolders();
-            state=MODE_FOLDER;
+            state^=1;
         }
     }
     public void loadFolders(){
