@@ -15,6 +15,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 public class ScheduleAddActivity extends AppCompatActivity {
@@ -27,6 +29,11 @@ public class ScheduleAddActivity extends AppCompatActivity {
         setContentView(R.layout.activity_schedule_add);
         LinearLayout linearLayout = findViewById(R.id.schedule_add_layout);
         addTime(linearLayout);
+        Intent intent = getIntent();
+        String jsonstr = intent.getStringExtra("json Data");
+        if(jsonstr != null){
+            decodeJson(jsonstr);
+        }
 
     }
     public RelativeLayout addSpinner(RelativeLayout relativeLayout,int Array_id){
@@ -83,9 +90,6 @@ public class ScheduleAddActivity extends AppCompatActivity {
         //add relative layout
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.schedule_add_layout);
         RelativeLayout relativeLayout = (RelativeLayout)new RelativeLayout(this);
-        TextView textView;
-        RelativeLayout.LayoutParams params =
-                new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         //set spinner and textview
         relativeLayout = addSpinner(relativeLayout,R.array.array_days);
         relativeLayout = addSpinnerText(relativeLayout,"요일");
@@ -98,9 +102,24 @@ public class ScheduleAddActivity extends AppCompatActivity {
         relativeLayout = addSpinnerText(relativeLayout,"시");
         relativeLayout = addSpinner(relativeLayout,R.array.array_mins);
         relativeLayout = addSpinnerText(relativeLayout,"분");
+        //add delete button
+        ImageButton imageButton = new ImageButton(this);
+        imageButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_delete));
+        relativeLayout.addView(imageButton);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_END);
+        imageButton.setLayoutParams(params);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteLayout((RelativeLayout)view.getParent());
+            }
+        });
+
+
         //set to the view
         Button button = (Button) findViewById(R.id.add);
-        ViewGroup viewGroup = findViewById(R.id.schedule_add_layout);
+        ViewGroup viewGroup = (ViewGroup)linearLayout;
         viewGroup.removeView(button);
         linearLayout.addView(relativeLayout);
         viewGroup.addView(button);
@@ -110,9 +129,15 @@ public class ScheduleAddActivity extends AppCompatActivity {
         String[] ret = new String[5];
         for(int i=0;i<5;i++){
             Spinner sp = (Spinner) findViewById(i+id);
+            if(sp==null)
+                return null;
             ret[i] = sp.getSelectedItem().toString();
         }
         return ret;
+    }
+    public void deleteLayout(RelativeLayout view){
+        ViewGroup parent = (ViewGroup)view.getParent();
+        parent.removeView(view);
     }
     public boolean isValidTime(String[] lec_time){
         if(Integer.parseInt(lec_time[HOUR1])<Integer.parseInt(lec_time[HOUR2]))
@@ -138,17 +163,61 @@ public class ScheduleAddActivity extends AppCompatActivity {
             Toast.makeText(this,"Invaild input exists",Toast.LENGTH_SHORT).show();
             return;
         }
+
+        int removeCount=0;
         for(int i=1; i<=spinnum;i+=5){
             lec_time = resolveSpinners(i);
+            if(lec_time == null) {
+                removeCount++;
+                continue;
+            }
             if(!isValidTime(lec_time)){
                 return;
             }
-            intent.putExtra("Lecture"+Integer.toString(i/5+1),lec_time);
+            intent.putExtra("Lecture"+Integer.toString(i/5+1 - removeCount),lec_time);
         }
         intent.putExtra("Lecture_name",lecture_text);
         intent.putExtra("Lecture_professor",professor_text);
-        intent.putExtra("Lecture_size",spinnum/5);
+        intent.putExtra("Lecture_size",spinnum/5 - removeCount);
         setResult(RESULT_OK,intent);
         finish();
     }
+
+    public void decodeJson(String jsonstr){
+        try {
+            //get lecture name and professor name
+            JSONObject jsonObject = new JSONObject(jsonstr);
+            JSONArray scheduleJsonArray = jsonObject.getJSONArray("schedule");
+            String[] lectureInfo = {jsonObject.get("lecture").toString(),
+                    jsonObject.get("professor").toString(),
+                    jsonObject.get("color").toString()};
+            //set textview for lecture name and professor name
+            TextView lectureTextView = findViewById(R.id.lecture);
+            TextView professorTextView = findViewById(R.id.professor);
+            lectureTextView.setText(lectureInfo[0]);
+            professorTextView.setText(lectureInfo[1]);
+            //remove layout(created at onCreate)
+            LinearLayout rootLayout = findViewById(R.id.schedule_add_layout);
+            RelativeLayout relativeLayout = (RelativeLayout)rootLayout.getChildAt(2);
+            deleteLayout(relativeLayout);
+            //spinners setting
+            for(int i=0; i<scheduleJsonArray.length();i++) {
+                //get time informations
+                JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(i);
+                Integer[] timeInfo = {timeJsonInfo.getInt("day")-1,
+                        timeJsonInfo.getInt("hour1")-9,
+                        timeJsonInfo.getInt("min1"),
+                        timeJsonInfo.getInt("hour2")-9,
+                        timeJsonInfo.getInt("min2")};
+                //set time informations
+                addTime(rootLayout);
+                RelativeLayout layout = (RelativeLayout) rootLayout.getChildAt(rootLayout.getChildCount()-2);
+                for(int j=0;j<5;j++){
+                    Spinner spinner = (Spinner)layout.getChildAt(j*2);
+                    spinner.setSelection(timeInfo[j]);
+                }
+            }
+        }catch (Exception e){ e.printStackTrace();}
+    }
 }
+

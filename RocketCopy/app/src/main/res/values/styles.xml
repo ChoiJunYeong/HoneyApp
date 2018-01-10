@@ -9,6 +9,7 @@
         <item name="android:actionMenuTextColor">@color/black</item>
         <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
     </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -22,7 +23,7 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style parent="@android:style/Widget.Spinner" name="SpinnerAsEditText">
+    <style name="SpinnerAsEditText" parent="@android:style/Widget.Spinner">
         <item name="android:background">@android:drawable/edit_text</item>
     </style>
 </resources>

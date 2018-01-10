@@ -12,10 +12,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
-    /*public void onButtonClicked(View v){
-        Intent intent = new Intent(getApplicationContext(),.class);
+    public void onButtonClicked(View v){
+        Intent intent = new Intent(getApplicationContext(),FileActivity.class);
         startActivity(intent);
-    }*/
+    }
     public void onButtonClicked2(View v){
         Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
         startActivity(intent);

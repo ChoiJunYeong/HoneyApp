@@ -74,7 +74,7 @@ public class DestinationsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_destinations);
         setDestinationLayout();
-        sharedPreferences = getSharedPreferences("honeyA", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("google", MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
 

@@ -24,6 +24,11 @@ import java.io.FileWriter;
  */
 
 public class Utils {
+    public int FOLDER,SCHEDULE;
+    Utils(){
+        FOLDER=0;
+        SCHEDULE=1;
+    }
     //change json file to string 'simply'
     public String readJSON(File filename){
         try {

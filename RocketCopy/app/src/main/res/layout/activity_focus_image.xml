@@ -6,16 +6,12 @@
     android:layout_height="match_parent"
     tools:context="com.example.junyeong.rocketcopy.FocusImage">
 
-    <ImageView
-        android:id="@+id/focusImage"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:id="@+id/linearLayout">
 
         <Button
             android:id="@+id/delete"
@@ -40,4 +36,11 @@
             android:layout_weight="1"
             android:text="Feedback" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/focusImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 </RelativeLayout>
