@@ -29,6 +29,7 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -48,6 +49,7 @@ import java.util.Set;
 public class SchedulerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
     UnscrollableGridView schedule;
     SchedulerAdapter adapter;
+    FolderIconAdapter iconAdapter;
     ArrayList<String> deleteFiles = new ArrayList<>();
     Set<String> schedules = null;
     HashMap<Integer[],String[]> scheduleHashMap; // HashMap is [day,hour1,min1,hour2,min2], [lecture,professor,color]
@@ -59,7 +61,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
-    static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2, REQUEST_IMAGE_CAPTURE = 2;
+    final static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2, REQUEST_IMAGE_CAPTURE = 2,MODE_FOLDER_ACTIVITY=3,MODE_FOLDER_ADD=4;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,48 +99,54 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
-        //save 버튼을 눌렸을때
-        if(requestCode == MODE_ADD&&resultCode==RESULT_OK) {
-            //setTimeTable(data);
-            HashMap<Integer[],String[]> newHashMap = getHashMap(data,true);
-            setScheduleTextView(newHashMap);
-            if(scheduleHashMap == null)
-                scheduleHashMap = new HashMap<>();
-            if(newHashMap!=null)
-                scheduleHashMap.putAll(newHashMap);
-        }
-        if(requestCode == MODE_MODIFY&&resultCode==RESULT_OK){
-            //setTimeTable(data);
-            HashMap<Integer[],String[]> newHashMap = getHashMap(data,false);
-            String[] value = newHashMap.values().iterator().next();
-
-            ArrayList<Integer[]> removekeyset = new ArrayList<Integer[]>();
-            for(Integer[] key : scheduleHashMap.keySet()){
-                if(scheduleHashMap.get(key)[0].equals(value[0])){
-                    removekeyset.add(key);
+        switch (requestCode) {
+            //save 버튼을 눌렸을때
+            case MODE_ADD:
+                if (resultCode == RESULT_OK) {
+                    //setTimeTable(data);
+                    HashMap<Integer[], String[]> newHashMap = getHashMap(data, true);
+                    setScheduleTextView(newHashMap);
+                    if (scheduleHashMap == null)
+                        scheduleHashMap = new HashMap<>();
+                    if (newHashMap != null)
+                        scheduleHashMap.putAll(newHashMap);
                 }
-            }
-            for(Integer[] removeKey : removekeyset)
-                scheduleHashMap.remove(removeKey);
-            if(scheduleHashMap == null)
-                scheduleHashMap = new HashMap<>();
-            else
-                scheduleHashMap.putAll(newHashMap);
-            RelativeLayout rootlayout = findViewById(R.id.scheduleParentLayout);
-            for(int i=1;i<rootlayout.getChildCount();i++){
-                TextView textView = (TextView) rootlayout.getChildAt(i);
-                rootlayout.removeView(rootlayout.getChildAt(i));
-                i--;
-            }
-            setScheduleTextView(scheduleHashMap);
-            setModifyMode();
+                break;
+            case MODE_MODIFY:
+                if (resultCode == RESULT_OK) {
+                    //setTimeTable(data);
+                    HashMap<Integer[], String[]> newHashMap = getHashMap(data, false);
+                    String[] value = newHashMap.values().iterator().next();
+
+                    ArrayList<Integer[]> removekeyset = new ArrayList<Integer[]>();
+                    for (Integer[] key : scheduleHashMap.keySet()) {
+                        if (scheduleHashMap.get(key)[0].equals(value[0])) {
+                            removekeyset.add(key);
+                        }
+                    }
+                    for (Integer[] removeKey : removekeyset)
+                        scheduleHashMap.remove(removeKey);
+                    if (scheduleHashMap == null)
+                        scheduleHashMap = new HashMap<>();
+                    else
+                        scheduleHashMap.putAll(newHashMap);
+                    RelativeLayout rootlayout = findViewById(R.id.scheduleParentLayout);
+                    for (int i = 1; i < rootlayout.getChildCount(); i++) {
+                        TextView textView = (TextView) rootlayout.getChildAt(i);
+                        rootlayout.removeView(rootlayout.getChildAt(i));
+                        i--;
+                    }
+                    setScheduleTextView(scheduleHashMap);
+                    setModifyMode();
+                }
+            case MODE_FOLDER_ADD:
+                loadFolders();
+                break;
+            case MODE_FOLDER_ACTIVITY:
+                loadFolders();
+                break;
+            //
         }
-        //
-    }
-    @Override
-    public void onDestroy(){
-        System.exit(0);
-        super.onDestroy();
     }
     public void makeToggle(Toolbar toolbar){
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.scheduler_home);
@@ -161,16 +169,24 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        Intent intent;
         switch (item.getItemId()){
             case R.id.action_add:
                 addSchedule();
                 break;
-            case R.id.action_delete:
-                onDeleteSchedule();
+            case R.id.action_folder_add:
+                intent = new Intent(getApplicationContext(),AddFolderActivity.class);
+                startActivityForResult(intent,MODE_FOLDER_ADD);
                 break;
             case R.id.action_modify:
                 setModifyMode();
                 break;
+            case R.id.action_delete:
+                onDeleteSchedule();
+                break;
+            case R.id.action_show_file_activity:
+                intent = new Intent(getApplicationContext(),FileActivity.class);
+                startActivityForResult(intent,MODE_FOLDER_ACTIVITY);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -561,8 +577,9 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     //folder list using gridview custom adapter
     public void loadFolders(){
-        FolderIconAdapter iconAdapter = new FolderIconAdapter();
+        iconAdapter = new FolderIconAdapter();
         GridView gridView = findViewById(R.id.folder_icon);
+        //set adapter
         for(File folder : myDir.listFiles()){
             File timesheet = new File(folder,"/timesheet.json");
             if(timesheet.exists())
@@ -571,8 +588,23 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             folderIconItem.setTag(folder.getName());
             iconAdapter.addItem(folderIconItem);
         }
+        //make last item blank
+        for(int i=0;i<4-iconAdapter.getCount()%4;i++){
+            FolderIconItem folderIconItem = new FolderIconItem();
+            folderIconItem.setTag("");
+            iconAdapter.addItem(folderIconItem);
+        }
         gridView.setAdapter(iconAdapter);
-
+        //set onclicklistener
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                FolderIconItem folderIconItem =(FolderIconItem) adapterView.getItemAtPosition(i);
+                Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
+                intent.putExtra("Directory",(new File(filepath,folderIconItem.getTag())).toString());
+                startActivity(intent);
+            }
+        });
         //set height
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)gridView.getLayoutParams();
         if(adapter.getCount() != 0) {
@@ -674,6 +706,24 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 }
             });
         }
+        //set onitemclicklistener for folders
+        GridView gridView = findViewById(R.id.folder_icon);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ImageView imageView = view.findViewById(R.id.folder_icon);
+                TextView textView = view.findViewById(R.id.folder_name);
+                String folderName = textView.getText().toString();
+                if(deleteFiles.contains(folderName)){
+                    imageView.setImageDrawable(getDrawable(R.drawable.ic_folder_24dp));
+                    deleteFiles.remove(folderName);
+                }
+                else {
+                    imageView.setImageDrawable(getDrawable(R.drawable.ic_menu_delete));
+                    deleteFiles.add(folderName);
+                }
+            }
+        });
 
     }
     public void setNormalMode(View view){
@@ -697,6 +747,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         //set schedule
         scheduleHashMap = getScheduleList();
         setScheduleTextView(scheduleHashMap);
+        loadFolders();
     }
     public void setModifyMode(){
         //modify actionbar
@@ -705,6 +756,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         TextView confirm = findViewById(R.id.confirm);
         confirm.setVisibility(View.VISIBLE);
         menu.setGroupVisible(R.id.default_group,false);
+        //set onclick listener for schedule
         RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         for(int i=1;i<relativeLayout.getChildCount();i++){
             TextView textView = (TextView) relativeLayout.getChildAt(i);
@@ -721,6 +773,18 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 }
             });
         }
+        //set onitemclicklistener for folders
+        GridView gridView = findViewById(R.id.folder_icon);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                TextView textView = view.findViewById(R.id.folder_name);
+                String folderName = textView.getText().toString();
+                Intent intent = new Intent(getApplicationContext(),AddFolderActivity.class);
+                intent.putExtra("Directory",folderName);
+                startActivityForResult(intent,MODE_MODIFY);
+            }
+        });
     }
     public void onConfirmDeleteResult(){
         //delete directory
@@ -883,12 +947,13 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             FolderIconItemView view = new FolderIconItemView(getApplicationContext());
             FolderIconItem item = items.get(position);
             view.setTag(item.getTag());
-            view.setImageView();
+            if(!item.getTag().equals(""))
+                view.setImageView();
             return view;
         }
         @Override
         public boolean isEnabled(int i){
-            return true;
+            return !items.get(i).getTag().equals("");
         }
     }
 }

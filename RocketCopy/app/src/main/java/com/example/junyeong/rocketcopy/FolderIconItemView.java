@@ -1,6 +1,8 @@
 package com.example.junyeong.rocketcopy;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
@@ -33,5 +35,8 @@ public class FolderIconItemView extends LinearLayout {
     }
     public void setImageView(){
         imageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_folder_24dp));
+    }
+    public void setImageView(Drawable drawableimage){
+        imageView.setImageDrawable(drawableimage);
     }
 }

@@ -82,9 +82,10 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        Intent intent;
         switch (item.getItemId()){
             case R.id.action_add:
-                Intent intent = new Intent(getApplicationContext(),AddFolderActivity.class);
+                intent = new Intent(getApplicationContext(),AddFolderActivity.class);
                 startActivityForResult(intent,REQUEST_ADD_FOLDER);
                 break;
             case R.id.action_delete:
@@ -94,6 +95,8 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
                 setModifyMode();
                 break;
             case R.id.action_loadscheduler:
+                intent = new Intent(getApplicationContext(),SchedulerActivity.class);
+                startActivityForResult(intent,REQUEST_MODIFY_FOLDER);
                 break;
         }
         return super.onOptionsItemSelected(item);

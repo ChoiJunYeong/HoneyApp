@@ -7,17 +7,27 @@
         <item
             android:id="@+id/action_add"
             android:orderInCategory="100"
-            android:title="add"
+            android:title="시간표 추가"
             app:showAsAction="never" />
         <item
-            android:id="@+id/action_delete"
-            android:orderInCategory="110"
-            android:title="delete"
+            android:id="@+id/action_folder_add"
+            android:orderInCategory="120"
+            android:title="폴더 추가"
             app:showAsAction="never" />
         <item
             android:id="@+id/action_modify"
             android:orderInCategory="120"
-            android:title="modify"
+            android:title="시간표/폴더 수정"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_delete"
+            android:orderInCategory="110"
+            android:title="시간표/폴더 삭제"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_show_file_activity"
+            android:orderInCategory="120"
+            android:title="폴더 보기"
             app:showAsAction="never" />
     </group>
 
