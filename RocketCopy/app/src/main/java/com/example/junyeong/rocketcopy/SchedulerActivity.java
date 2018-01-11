@@ -68,34 +68,43 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         setContentView(R.layout.activity_scheduler);
         //check root directory exists
         //check directory exists
-        if(!myDir.mkdirs())
-            if(!myDir.getParentFile().exists())
-                Toast.makeText(this,"Error" + myDir.getParent(),Toast.LENGTH_SHORT).show();
-        if(!myDir.mkdir())
-            if(!myDir.exists())
-                Toast.makeText(this,"Error" + myDir.toString(),Toast.LENGTH_SHORT).show();
+        if (!myDir.mkdirs())
+            if (!myDir.getParentFile().exists())
+                Toast.makeText(this, "Error" + myDir.getParent(), Toast.LENGTH_SHORT).show();
+        if (!myDir.mkdir())
+            if (!myDir.exists())
+                Toast.makeText(this, "Error" + myDir.toString(), Toast.LENGTH_SHORT).show();
         //action bar setting
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_scheduler);
         setSupportActionBar(toolbar);
-        makeToggle(toolbar);
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
+        //load scheduler
         scheduleHashMap = getScheduleList();
         loadScheduler();
         setScheduleTextView(scheduleHashMap);
 
-        FloatingActionButton fab = findViewById(R.id.camera2);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dispatchTakePictureIntent();
+        //setting for move image
+        Intent intent= getIntent();
+        if(intent.getStringArrayExtra("image2move")!=null){
+            setMoveMode(intent.getStringArrayExtra("image2move"));
+        }
+        else {
+            //make menu buttons
+            makeToggle(toolbar);
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+            //make camera button
+            FloatingActionButton fab = findViewById(R.id.camera2);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    dispatchTakePictureIntent();
                 /*Intent intent = new Intent(getApplicationContext(),CameraActivity.class);
                 intent.putExtra("Directory",filepath);
                 startActivityForResult(intent,CAMERA_ACTIVITY);*/
 
-            }
-        });
+                }
+            });
+        }
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -785,6 +794,39 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 startActivityForResult(intent,MODE_MODIFY);
             }
         });
+    }
+    public void setMoveMode(final String[] images){
+        //set onclick listener for times
+        RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+        int size = relativeLayout.getChildCount();
+        for(int i=1;i<size;i++){
+            TextView scheduleView = (TextView) relativeLayout.getChildAt(i);
+            scheduleView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    moveImage(images, ((TextView)view).getText().toString());
+                }
+            });
+        }
+        GridView gridView = findViewById(R.id.folder_icon);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                FolderIconItem folderIconItem = (FolderIconItem)adapterView.getItemAtPosition(i);
+                moveImage(images,folderIconItem.getTag());
+            }
+        });
+    }
+    public void moveImage(String[] images,String folder){
+        File dstFolder = new File(myDir,folder+"/images");
+        for(String filename : images){
+            String newFilename = filename.substring(filename.lastIndexOf('/')+1);
+            File newFile = new File(dstFolder,newFilename);
+            File moveFile = new File(filename);
+            moveFile.renameTo(newFile);
+        }
+        setResult(RESULT_OK);
+        finish();
     }
     public void onConfirmDeleteResult(){
         //delete directory

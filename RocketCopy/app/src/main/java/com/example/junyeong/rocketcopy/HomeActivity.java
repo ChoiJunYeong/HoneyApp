@@ -91,7 +91,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     DialogInterface dialogInterface;
     static int Newest=1,Oldest=-1;
     int status=Newest;
-    static int IMAGE_FOCUS=1,REQUEST_IMAGE_CAPTURE = 2,REQUEST_CODE_SIGN_IN=3;
+    final static int IMAGE_FOCUS=1,REQUEST_IMAGE_CAPTURE = 2,REQUEST_CODE_SIGN_IN=3, REQUEST_MOVE_IMAGE=0;
     GoogleSignInClient googleSignInClient;
     DriveResourceClient driveResourceClient;
     DriveClient driveClient;
@@ -147,32 +147,39 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(resultCode==RESULT_OK && requestCode == IMAGE_FOCUS) {
-            String imgPath = data.getStringExtra("filepath");
-            File img = new File(imgPath);
-            img.delete();
-            showHistory();
-        }
-        else if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
-
-            Bundle extras = data.getExtras();
-            Bitmap image = (Bitmap) extras.get("data");
-            SaveImage(image);
-        }
-        else if(resultCode==RESULT_CANCELED){
-            showHistory();
-        }
-        else if(requestCode == REQUEST_CODE_SIGN_IN){
-            if (resultCode == RESULT_OK) {
-                GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-                //save login state id_token
-                if (result.isSuccess()) {
-                    driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
-                    driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
-                    saveFileToDrive();
+        switch (requestCode) {
+            case IMAGE_FOCUS:
+                if (resultCode == RESULT_OK) {
+                    String imgPath = data.getStringExtra("filepath");
+                    File img = new File(imgPath);
+                    img.delete();
+                    showHistory();
                 }
+                break;
+            case REQUEST_IMAGE_CAPTURE:
+                if (resultCode == RESULT_OK) {
 
-            }
+                    Bundle extras = data.getExtras();
+                    Bitmap image = (Bitmap) extras.get("data");
+                    SaveImage(image);
+                }
+                break;
+            case REQUEST_CODE_SIGN_IN:
+                if (resultCode == RESULT_OK) {
+                    GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                    //save login state id_token
+                    if (result.isSuccess()) {
+                        driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                        driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
+                        saveFileToDrive();
+                    }
+                }
+                break;
+            case REQUEST_MOVE_IMAGE:
+                showHistory();
+            default:
+                showHistory();
+                setNormalMode();
         }
     }
 
@@ -756,6 +763,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra(Intent.EXTRA_TEXT, text);
         Intent chooser = Intent.createChooser(intent, "이미지 공유하기");
         startActivity(chooser);
+    }
+    public void moveItems(View view){
+        String[] images = new String[selectedFiles.size()];
+        for(int i=0;i<selectedFiles.size();i++){
+            images[i] = (new File(filepath,selectedFiles.get(i))).toString();
+        }
+        Intent intent = new Intent(getApplicationContext(),SchedulerActivity.class);
+        intent.putExtra("image2move",images);
+        startActivityForResult(intent, REQUEST_MOVE_IMAGE);
     }
     public void SaveImage(Bitmap bitmap){
         File myDir = new File(filepath);

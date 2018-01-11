@@ -12,13 +12,17 @@ import android.text.Layout;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class FocusImage extends AppCompatActivity {
-    String imgPath;
+    String[] imgPath = new String[1];
     Bitmap img;
     ImageView imageView;
-    int REQUEST_MOVE_IMAGE=0;
+    final int REQUEST_MOVE_IMAGE=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //if image moved, finish activity
@@ -27,8 +31,8 @@ public class FocusImage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_focus_image);
         //load image
-        imgPath = getIntent().getExtras().getString("file name");
-        img = BitmapFactory.decodeFile(imgPath);
+        imgPath[0]=getIntent().getExtras().getString("file name");
+        img = BitmapFactory.decodeFile(imgPath[0]);
         //set imageview
         imageView = findViewById(R.id.focusImage);
         imageView.setImageBitmap(img);
@@ -52,6 +56,16 @@ public class FocusImage extends AppCompatActivity {
 
             }
         });
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch (requestCode){
+            case REQUEST_MOVE_IMAGE:
+                if(resultCode==RESULT_OK){
+                    finish();
+                }
+                break;
+        }
     }
     public void checkDelete(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -79,7 +93,7 @@ public class FocusImage extends AppCompatActivity {
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setType("image/jpeg");
         String text = "다른 앱에 공유하기";
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imgPath));
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imgPath[0]));
         intent.putExtra(Intent.EXTRA_TEXT, text);
         Intent chooser = Intent.createChooser(intent, "이미지 공유하기");
         startActivity(chooser);
@@ -87,6 +101,6 @@ public class FocusImage extends AppCompatActivity {
     public void moveItem(View view){
         Intent intent = new Intent(getApplicationContext(),SchedulerActivity.class);
         intent.putExtra("image2move",imgPath);
-    //    startActivityForResult(intent,REQUEST_MOVE_IMAGE);
+        startActivityForResult(intent,REQUEST_MOVE_IMAGE);
     }
 }
