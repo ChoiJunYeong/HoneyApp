@@ -29,6 +29,7 @@ public class AddFolderActivity extends AppCompatActivity {
     File myDir = new File(Environment.getExternalStorageDirectory().toString() + "/honeyA");
     String filename;
     final String[] ReservedChars = {"|", "\\", "?", "*", "<", "\"", ":", ">","/"};
+    Utils utils = new Utils();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,7 +38,7 @@ public class AddFolderActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_file);
         setSupportActionBar(toolbar);
         RelativeLayout rootLayout = findViewById(R.id.textsParentLayout);
-        rootLayout.setPadding(0,getStatusBarSize(),0,0);
+        rootLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
         //check is it modify mode
         filename = getIntent().getStringExtra("Directory");
         if(filename!=null){
@@ -64,15 +65,6 @@ public class AddFolderActivity extends AppCompatActivity {
                 editMemo.setText(memo);
             }catch (Exception e){ e.printStackTrace();}
         }
-    }
-    private int getStatusBarSize() {
-        TypedValue tv = new TypedValue();
-        int TitleBarHeight=0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            TitleBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-        return TitleBarHeight;
     }
     public void saveItem(View view){
         EditText editName = findViewById(R.id.nameEdit);

@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-import static com.example.junyeong.rocketcopy.SchedulerActivity.REQUEST_IMAGE_CAPTURE;
+import static com.example.junyeong.rocketcopy.Utils.*;
 
 public class MainActivity extends AppCompatActivity {
 

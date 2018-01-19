@@ -1,5 +1,6 @@
 package com.example.junyeong.rocketcopy;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,21 +13,28 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+
+import static com.example.junyeong.rocketcopy.Utils.*;
 
 public class FileActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
     File myDir = new File(Environment.getExternalStorageDirectory(),"honeyA");
@@ -36,7 +44,8 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     ActionBarDrawerToggle toggle;
     Menu menu;
     ArrayList<String> selectedFoldernames;
-    static final int REQUEST_ADD_FOLDER=0,REQUEST_MODIFY_FOLDER=REQUEST_ADD_FOLDER, MODE_FOLDER = 0,MODE_FOLDERICON=1;
+    RelativeLayout currentLayout;
+    DialogInterface dialogInterface;
     int selectedColor = 0x222222,state = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,30 +119,178 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_all_picture:
                 break;
             case R.id.nav_scheduler:
+                setViewMode("folders");
                 break;
             case R.id.nav_destinations:
+                setViewMode("destinations");
                 break;
             case R.id.nav_settings:
+                setViewMode("settings");
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.file_home);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+    public void setViewMode(String mode){
+        LinearLayout linearLayout = findViewById(R.id.navViewLayout);
+        linearLayout.removeAllViews();
+        linearLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
+
+        GridView gridView = findViewById(R.id.file_parent);
+        gridView.setAdapter(null);
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        ImageButton imageButton = findViewById(R.id.stateImageButton);
+        switch(mode){
+            case "folders":
+                imageButton.setVisibility(View.VISIBLE);
+                swapViewMode(null);
+                break;
+            case "destinations":
+                imageButton.setVisibility(View.INVISIBLE);
+                RelativeLayout destinationsActivity = (RelativeLayout) inflater.inflate(R.layout.activity_destinations, null);
+                View action_bar = (View) destinationsActivity.getChildAt(destinationsActivity.getChildCount()-1);
+                action_bar.setVisibility(View.GONE);
+                linearLayout.addView(destinationsActivity);
+                setDestinationLayout();
+                break;
+            case "settings":
+                imageButton.setVisibility(View.INVISIBLE);
+                LinearLayout settingsActivity = (LinearLayout) inflater.inflate(R.layout.activity_settings, null);
+                linearLayout.addView(settingsActivity);
+                break;
+        }
+    }
+    public void setDestinationLayout(){
+        RelativeLayout rootLayout = findViewById(R.id.destinations);
+        //set onclicklistener
+        int size = rootLayout.getChildCount();
+        for(int i=0;i<size;i++){
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            child.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    redefineDestination((RelativeLayout)view);
+                }
+            });
+        }
+        //set textview according to json file
+        File jsonFile = new File(myDir,"destInfo.json");
+        if(!jsonFile.exists())
+            return;
+        for(int i=0;i<size;i++){
+            try {
+                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+                TextView nameView =(TextView) child.getChildAt(2);
+                TextView addressView =(TextView) child.getChildAt(3);
+
+                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
+                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
+
+                nameView.setText((String)jsonChild.get("name"));
+                addressView.setText((String)jsonChild.get("address"));
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+    //destination setting alert show
+    public void redefineDestination(RelativeLayout relativeLayout){
+        currentLayout = relativeLayout;
+        //alert dialog selecting send type(email or drive)
+
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        RelativeLayout alertLayout = (RelativeLayout) inflater.inflate(R.layout.alert_select, null);
+        RelativeLayout googleDriveLayout = (RelativeLayout)alertLayout.getChildAt(0);
+        RelativeLayout emailLayout = (RelativeLayout)alertLayout.getChildAt(1);
+        googleDriveLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  signIn();
+            }
+        });
+        emailLayout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                setMailAddress();
+                dialogInterface.dismiss();
+            }
+        });
+        alert.setView(alertLayout);
+        alert.create();
+        dialogInterface = alert.show();
+    }
+
     public void swapViewMode(View view){
         if(state==MODE_FOLDER) {
             ImageButton imageButton = findViewById(R.id.stateImageButton);
             imageButton.setImageDrawable(getDrawable(R.drawable.ic_dashboard_black_24dp));
             loadFolderIconMode();
-            state^=1;
         }
         else{
             ImageButton imageButton = findViewById(R.id.stateImageButton);
             imageButton.setImageDrawable(getDrawable(R.drawable.ic_folder_24dp));
             loadFolders();
-            state^=1;
         }
+        state^=1;
     }
+    //alert that modify email address
+    public void setMailAddress(){
+
+        //alert dialog view setting
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        final EditText destEdit = new EditText(this);
+        final EditText addressEdit = new EditText(this);
+
+        TextView textView1 = (TextView) currentLayout.getChildAt(2);
+        TextView textView2 = (TextView) currentLayout.getChildAt(3);
+
+        destEdit.setText(textView1.getText());
+        addressEdit.setText(textView2.getText());
+
+        TextView textView11 = new TextView(this);
+        TextView textView22 = new TextView(this);
+        textView11.setText("Destination");
+        textView22.setText("Address");
+        linearLayout.addView(textView11);
+        linearLayout.addView(destEdit);
+        linearLayout.addView(textView22);
+        linearLayout.addView(addressEdit);
+
+        alert.setView(linearLayout);
+
+        //yes and no button listener
+        alert.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                TextView textView1 = (TextView) currentLayout.getChildAt(2);
+                TextView textView2 = (TextView) currentLayout.getChildAt(3);
+                textView1.setText(destEdit.getText());
+                textView2.setText(addressEdit.getText());
+                utils.writejson(myDir,
+                        currentLayout.getContentDescription().toString(),
+                        destEdit.getText().toString(),
+                        addressEdit.getText().toString());
+            }
+
+        });
+        alert.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+
+        });
+        alert.show();
+    }
+
     public void loadFolders(){
         //set filefilter for find json and image
         FilenameFilter jsonFilenameFilter = utils.jsonFilenameFilter;
@@ -147,8 +304,9 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         adapter = new FolderAdapter();
         GridView rootLayout = findViewById(R.id.file_parent);
         rootLayout.setNumColumns(1);
-        rootLayout.setPadding(0,getStatusBarSize(),0,0);
-        for(File folder : myDir.listFiles()) {
+        rootLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
+        File[] allFolder = utils.sortByname(myDir.listFiles());
+        for(File folder : allFolder) {
             if (folder.isDirectory()) {
                 FolderItem folderItem = new FolderItem();
                 File imageFolder = new File(folder,"images");
@@ -180,15 +338,6 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
             }
         });
-    }
-    private int getStatusBarSize() {
-        TypedValue tv = new TypedValue();
-        int TitleBarHeight=0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            TitleBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-        return TitleBarHeight;
     }
     public void setDeletemode(){
         //swap visible button and invisible button
@@ -264,7 +413,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         //set views excpets adapter
         GridView rootLayout = findViewById(R.id.file_parent);
         rootLayout.setNumColumns(4);
-        rootLayout.setPadding(0,getStatusBarSize(),0,0);
+        rootLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
         //set adapter
         adapter2 = new FolderIconAdapter();
         for(File folder : myDir.listFiles()) {

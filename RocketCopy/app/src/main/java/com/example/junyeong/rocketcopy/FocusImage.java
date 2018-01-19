@@ -18,11 +18,13 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.example.junyeong.rocketcopy.Utils.*;
+
 public class FocusImage extends AppCompatActivity {
     String[] imgPath = new String[1];
     Bitmap img;
     ImageView imageView;
-    final int REQUEST_MOVE_IMAGE=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //if image moved, finish activity

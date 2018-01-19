@@ -9,8 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import static com.example.junyeong.rocketcopy.Utils.*;
+
 public class LoadingActivity extends AppCompatActivity {
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
+
     private static String[] PERMISSIONS = {
             Manifest.permission.CAMERA,
             Manifest.permission.READ_EXTERNAL_STORAGE,

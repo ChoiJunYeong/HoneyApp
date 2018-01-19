@@ -103,7 +103,7 @@ public class DestinationsActivity extends AppCompatActivity {
     public void setDestinationLayout(){
         RelativeLayout rootLayout = findViewById(R.id.destinations);
         //move to under status-bar
-        rootLayout.setPadding(0,getStatusBarSize(),0,0);
+        rootLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
         //set onclicklistener
         int size = rootLayout.getChildCount();
         for(int i=0;i<size;i++){
@@ -224,15 +224,6 @@ public class DestinationsActivity extends AppCompatActivity {
         return GoogleSignIn.getClient(this, signInOptions);
     }
     //return status-bar size for getting layout offset
-    private int getStatusBarSize() {
-        TypedValue tv = new TypedValue();
-        int TitleBarHeight=0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            TitleBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-        return TitleBarHeight;
-    }
 
     public void goHome(View view){
         finish();

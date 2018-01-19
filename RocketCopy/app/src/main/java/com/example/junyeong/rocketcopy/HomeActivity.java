@@ -78,6 +78,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.example.junyeong.rocketcopy.Utils.*;
+
+
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     ActionBarDrawerToggle toggle;
     GridView gridView;
@@ -91,12 +94,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     DialogInterface dialogInterface;
     static int Newest=1,Oldest=-1;
     int status=Newest;
-    final static int IMAGE_FOCUS=1,REQUEST_IMAGE_CAPTURE = 2,REQUEST_CODE_SIGN_IN=3, REQUEST_MOVE_IMAGE=0;
+
     GoogleSignInClient googleSignInClient;
     DriveResourceClient driveResourceClient;
     DriveClient driveClient;
     Bitmap currentImage;
     Boolean[] SendList = new Boolean[5];
+    private int StatusBarSize;
     final static int GOOGLE_DRIVE_SEND=1;
     public List<String> selectedFiles= new ArrayList<String>();
     @Override
@@ -104,7 +108,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
+        StatusBarSize = utils.getStatusBarSize(this);
         Intent intent = getIntent();
         filepath = intent.getStringExtra("Directory") + "/images";
         myDir = new File(filepath);
@@ -254,17 +258,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    //return status-bar size for getting layout offset
-//to understand
-    private int getStatusBarSize() {
-        TypedValue tv = new TypedValue();
-        int TitleBarHeight=0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            TitleBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-        return TitleBarHeight;
-    }
+
 
 
     void createView(String view){
@@ -279,7 +273,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) linearLayout.getLayoutParams();
 
             /*해당 margin값 변경*/
-        plControl.topMargin = getStatusBarSize();
+        plControl.topMargin = StatusBarSize;
 
             /*변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅*/
         linearLayout.setLayoutParams(plControl);
@@ -526,7 +520,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) gridView.getLayoutParams();
 
             /*해당 margin값 변경*/
-        plControl.topMargin = getStatusBarSize();
+        plControl.topMargin = StatusBarSize;
 
             /*변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅*/
         gridView.setLayoutParams(plControl);
@@ -796,7 +790,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         //how to broadcast? it doesn't do anything
         sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
                 Uri.parse("file://" + Environment.getExternalStorageDirectory())));
-
+        showHistory();
         SendList[GOOGLE_DRIVE_SEND]=true;
         if(SendList[GOOGLE_DRIVE_SEND]) {
             signIn();

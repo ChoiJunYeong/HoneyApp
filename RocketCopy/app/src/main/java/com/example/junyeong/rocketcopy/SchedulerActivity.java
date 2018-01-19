@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import static com.example.junyeong.rocketcopy.Utils.*;
+
 public class SchedulerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
     UnscrollableGridView schedule;
     SchedulerAdapter adapter;
@@ -61,7 +63,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
-    final static int MODE_ADD=0,MODE_MODIFY = 1,CAMERA_ACTIVITY = 2, REQUEST_IMAGE_CAPTURE = 2,MODE_FOLDER_ACTIVITY=3,MODE_FOLDER_ADD=4;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -238,7 +239,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) otherviewLayout.getLayoutParams();
 
             /*해당 margin값 변경*/
-        plControl.topMargin = getStatusBarSize();
+        plControl.topMargin = utils.getStatusBarSize(this);
 
             /*변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅*/
         otherviewLayout.setLayoutParams(plControl);
@@ -451,7 +452,9 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             hashmapsize = 0;
         else
             hashmapsize = scheduleHashMap.size();
-        String[] lectureInfo = {intent.getStringExtra("Lecture_name"), intent.getStringExtra("Lecture_professor"), Integer.toString(colors[(int)(Math.random()*colors.length)])};
+        String[] lectureInfo = {intent.getStringExtra("Lecture_name"), intent.getStringExtra("Lecture_professor"), "0"};
+        int color = colors[utils.string2int(lectureInfo[0])%colors.length];
+        lectureInfo[2]=Integer.toString(color);
         int size = intent.getIntExtra("Lecture_size", 1);
         Integer[][] timedata = new Integer[size][5];
         for (int i = 1; i <= size; i++) {
@@ -496,6 +499,11 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             if (!subDir.mkdir())
                 if (!subDir.exists())
                     Toast.makeText(this, "Error" + subDir.toString(), Toast.LENGTH_SHORT).show();
+            //이미지 폴더 생성
+            File imgfolder = new File(subDir,"images");
+            if (!imgfolder.mkdir())
+                if (!imgfolder.exists())
+                    Toast.makeText(this, "Error" + imgfolder.toString(), Toast.LENGTH_SHORT).show();
 
             String jsonStr = jsonwriting(lectureInfo[0], lectureInfo[1], lectureInfo[2], size, timedata);
             File jsonFile = new File(subDir, "timesheet.json");
@@ -520,7 +528,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
 
 
         RelativeLayout scheduleParentLayout = (RelativeLayout) findViewById(R.id.scheduleParentLayout);
-        scheduleParentLayout.setPadding(0,getStatusBarSize(),0,0);
+        scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
 
         for(Integer[] newScheduleUnit : newSchedule.keySet() ){
 
@@ -624,62 +632,29 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         gridView.setLayoutParams(params);
     }
     //folders layout show or not
-    public void folderShow(View view){
+    public void folderShow(View view) {
         //set animation
         final GridView gridView = findViewById(R.id.folder_icon);
-        final float moveScale = gridView.getHeight() | -1*gridView.getPaddingBottom();
-        TranslateAnimation anim;
-        if(gridView.getPaddingBottom()==-(int)moveScale){
-            anim = new TranslateAnimation(0f, 0f, 0f, -moveScale);
-        }
-        else{
-            anim = new TranslateAnimation(0f, 0f, 0f, moveScale);
-        }
-        anim.setDuration(0);
-        gridView.setAnimation(anim);
-        view.startAnimation(anim);
+        final float moveScale = gridView.getHeight() | -1 * gridView.getPaddingBottom();
         //move view and change icon
-        final ImageButton imageButton = (ImageButton)view;
-        anim.setAnimationListener(new Animation.AnimationListener(){
-            @Override
-            public void onAnimationStart(Animation arg0) {
-            }
-            @Override
-            public void onAnimationRepeat(Animation arg0) {
-
-            }
-            @Override
-            public void onAnimationEnd(Animation arg0) {
-                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) gridView.getLayoutParams();
-                if(gridView.getPaddingBottom()==-(int)moveScale){
-                    params.height = (int)moveScale;
-                    gridView.setPadding(0,0,0,0);
-                    imageButton.setImageDrawable(getDrawable(R.drawable.arrow_down_float));
-                }
-                else {
-                    params.height=0;
-                    gridView.setPadding(0, 0, 0, -(int) moveScale);
-                    imageButton.setImageDrawable(getDrawable(R.drawable.arrow_up_float));
-                }
-                gridView.setLayoutParams(params);
-            }
-        });
+        final ImageButton imageButton = (ImageButton) view;
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) gridView.getLayoutParams();
+        if (gridView.getPaddingBottom() == -(int) moveScale) {
+            params.height = (int) moveScale;
+            gridView.setPadding(0, 0, 0, 0);
+            imageButton.setImageDrawable(getDrawable(R.drawable.arrow_down_float));
+        } else {
+            params.height = 0;
+            gridView.setPadding(0, 0, 0, -(int) moveScale);
+            imageButton.setImageDrawable(getDrawable(R.drawable.arrow_up_float));
+        }
+        gridView.setLayoutParams(params);
     }
     //선택한 스케쥴의 폴더를 보여줌
     public void showItem(String folderName){
         Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
         intent.putExtra("Directory",folderName);
         startActivity(intent);
-    }
-    //calculate actionbar height
-    private int getStatusBarSize() {
-        TypedValue tv = new TypedValue();
-        int TitleBarHeight=0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
-        {
-            TitleBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
-        }
-        return TitleBarHeight;
     }
     //스케쥴 + 버튼을 누르면 활성화
     public void addSchedule(){
@@ -778,7 +753,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                     File file = new File(filepath,textView.getText().toString());
                     String jsonstr = utils.readJSON(new File(file,"timesheet.json"));
                     intent.putExtra("json Data",jsonstr);
-                    startActivityForResult(intent,MODE_MODIFY);
+                    startActivityForResult(intent, MODE_MODIFY);
                 }
             });
         }
@@ -791,7 +766,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 String folderName = textView.getText().toString();
                 Intent intent = new Intent(getApplicationContext(),AddFolderActivity.class);
                 intent.putExtra("Directory",folderName);
-                startActivityForResult(intent,MODE_MODIFY);
+                startActivityForResult(intent, MODE_MODIFY);
             }
         });
     }
