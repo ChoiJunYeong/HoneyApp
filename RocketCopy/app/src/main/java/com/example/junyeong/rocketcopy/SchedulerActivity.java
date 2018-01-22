@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -17,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -200,6 +202,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         }
         return super.onOptionsItemSelected(item);
     }
+
     //click nav bar
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -522,13 +525,17 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         if(newSchedule==null)
             return;
 
-        int WIDTH = 135;
+        RelativeLayout scheduleParentLayout = (RelativeLayout) findViewById(R.id.scheduleParentLayout);
+        scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        float WIDTH = size.x/8;
         float HEIGHT_HOUR = 150;
         float HEIGHT_MIN = 150/4;
 
 
-        RelativeLayout scheduleParentLayout = (RelativeLayout) findViewById(R.id.scheduleParentLayout);
-        scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
 
         for(Integer[] newScheduleUnit : newSchedule.keySet() ){
 
@@ -917,9 +924,10 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         }
         @Override
         public View getView(int position, View oldView, ViewGroup parent){
-
             ScheduleItemView view = new ScheduleItemView(getApplicationContext());
             ScheduleItem item = items.get(position);
+
+
             if(position<week){
                 view.setTag(days[position]);
             }
@@ -932,6 +940,10 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             else{
                 view.setTag("else");
             }
+            ViewGroup.LayoutParams param = parent.getLayoutParams();
+            param.height = 150;
+            view.setLayoutParams(param);
+
             return view;
         }
         @Override

@@ -57,10 +57,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.CreateFileActivityOptions;
 import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveClient;
 import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveResourceClient;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.tasks.Continuation;
@@ -73,6 +77,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Date;
@@ -81,7 +87,7 @@ import java.util.List;
 import static com.example.junyeong.rocketcopy.Utils.*;
 
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,GoogleApiClient.ConnectionCallbacks{
     ActionBarDrawerToggle toggle;
     GridView gridView;
     private Menu menu;
@@ -98,7 +104,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     GoogleSignInClient googleSignInClient;
     DriveResourceClient driveResourceClient;
     DriveClient driveClient;
+    GoogleApiClient googleApiClient;
     Bitmap currentImage;
+    String currentImageName;
     Boolean[] SendList = new Boolean[5];
     private int StatusBarSize;
     final static int GOOGLE_DRIVE_SEND=1;
@@ -166,17 +174,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     Bundle extras = data.getExtras();
                     Bitmap image = (Bitmap) extras.get("data");
                     SaveImage(image);
-                }
-                break;
-            case REQUEST_CODE_SIGN_IN:
-                if (resultCode == RESULT_OK) {
-                    GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-                    //save login state id_token
-                    if (result.isSuccess()) {
-                        driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
-                        driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
-                        saveFileToDrive();
-                    }
                 }
                 break;
             case REQUEST_MOVE_IMAGE:
@@ -257,8 +254,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
-
 
 
     void createView(String view){
@@ -793,65 +788,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         showHistory();
         SendList[GOOGLE_DRIVE_SEND]=true;
         if(SendList[GOOGLE_DRIVE_SEND]) {
-            signIn();
+            driveResourceClient = Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
+            driveClient = Drive.getDriveClient(this, GoogleSignIn.getLastSignedInAccount(this));
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Drive.API)
+                    .addScope(Drive.SCOPE_FILE)
+                    .addConnectionCallbacks(this)
+                    .build();
+            googleApiClient.connect();
+            //saveFileToDrive();
             currentImage = bitmap;
+            currentImageName = fname;
+            CreateMyFile();
         }
-    }
-    private void signIn() {
-        googleSignInClient = buildGoogleSignInClient();
-        startActivityForResult(googleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
-    }
-    // Build a Google SignIn client.
-    private GoogleSignInClient buildGoogleSignInClient() {
-        GoogleSignInOptions signInOptions =
-                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestScopes(Drive.SCOPE_FILE)
-                        .build();
-        return GoogleSignIn.getClient(this, signInOptions);
-    }
-    private void saveFileToDrive() {
-        // Start by creating a new contents, and setting a callback.
-        driveResourceClient
-                .createContents()
-                .continueWithTask(
-                        new Continuation<DriveContents, Task<Void>>() {
-                            @Override
-                            public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
-                                return createFileIntentSender(task.getResult(), currentImage);
-                            }
-                        });
-    }
-    private Task<Void> createFileIntentSender(DriveContents driveContents, Bitmap image) {
-        // Get an output stream for the contents.
-        OutputStream outputStream = driveContents.getOutputStream();
-        // Write the bitmap data from it.
-        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.JPEG, 100, bitmapStream);
-        try {
-            outputStream.write(bitmapStream.toByteArray());
-        } catch (IOException e) {
-            Toast.makeText(getApplicationContext(),"upload fail",Toast.LENGTH_LONG).show();
-        }
-        MetadataChangeSet metadataChangeSet =
-                new MetadataChangeSet.Builder()
-                        .setMimeType("image/jpeg")
-                        .setTitle("Android_Photo.jpeg")
-                        .build();
-        CreateFileActivityOptions createFileActivityOptions =
-                new CreateFileActivityOptions.Builder()
-                        .setInitialMetadata(metadataChangeSet)
-                        .setInitialDriveContents(driveContents)
-                        .build();
-        return driveClient
-                .newCreateFileActivityIntentSender(createFileActivityOptions)
-                .continueWith(
-                        new Continuation<IntentSender, Void>() {
-                            @Override
-                            public Void then(@NonNull Task<IntentSender> task) throws Exception {
-                                startIntentSender(task.getResult(), null, 0, 0, 0);
-                                return null;
-                            }
-                        });
     }
 //----------------------------------------------------------------------------------------------------------------
     public void checkDefualtDestination(View view){
@@ -867,4 +816,77 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(getApplicationContext(),ScanSettingActivity.class);
         startActivity(intent);
     }
+//--------------------------------------------------------------------------------------------------------------------
+    public void CreateMyFile(){
+    // create new contents resource
+    Drive.DriveApi.newDriveContents(googleApiClient)
+            .setResultCallback(driveContentsCallback);
+    }
+    final ResultCallback<DriveApi.DriveContentsResult> driveContentsCallback =
+            new ResultCallback<DriveApi.DriveContentsResult>() {
+                @Override
+                public void onResult(DriveApi.DriveContentsResult result) {
+
+                    if (result.getStatus().isSuccess()) {
+                            CreateFileOnGoogleDrive(result);
+                    }
+                }
+            };
+    public void CreateFileOnGoogleDrive(DriveApi.DriveContentsResult result){
+
+        final DriveContents driveContents = result.getDriveContents();
+
+        // Perform I/O off the UI thread.
+        new Thread() {
+            @Override
+            public void run() {
+                // Get an output stream for the contents.
+                OutputStream outputStream = driveContents.getOutputStream();
+                // Write the bitmap data from it.
+                ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+                currentImage.compress(Bitmap.CompressFormat.JPEG, 100, bitmapStream);
+                try {
+                    outputStream.write(bitmapStream.toByteArray());
+                } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(),"upload fail",Toast.LENGTH_LONG).show();
+                }
+
+                MetadataChangeSet changeSet =
+                        new MetadataChangeSet.Builder()
+                                .setMimeType("image/jpeg")
+                                .setTitle(currentImageName)
+                                .build();
+                // create a file in root folder
+                Drive.DriveApi.getRootFolder(googleApiClient)
+                        .createFile(googleApiClient, changeSet, driveContents)
+                        .setResultCallback(fileCallback);
+            }
+        }.start();
+    }
+    final private ResultCallback<DriveFolder.DriveFileResult> fileCallback = new
+            ResultCallback<DriveFolder.DriveFileResult>() {
+                @Override
+                public void onResult(DriveFolder.DriveFileResult result) {
+                    if (result.getStatus().isSuccess()) {
+
+                        Toast.makeText(getApplicationContext(), "file created: "+
+                                result.getDriveFile().getDriveId(), Toast.LENGTH_LONG).show();
+
+                    }
+
+                    return;
+
+                }
+            };
+
+    @Override
+    public void onConnected(Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
 }
