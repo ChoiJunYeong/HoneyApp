@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -93,7 +94,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private Menu menu;
     History_gallery_Adapter adapter;
     File[] imageList;
-    String filepath;
+    String filepath,dest_id;
     File rootDir,myDir;
     RelativeLayout currentLayout;
     Utils utils = new Utils();
@@ -315,29 +316,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             child.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    dest_id = "destination"+view.getContentDescription();
                     redefineDestination((RelativeLayout)view);
                 }
             });
         }
-        //set textview according to json file
-        File jsonFile = new File(rootDir,"destInfo.json");
-        if(!jsonFile.exists())
-            return;
         for(int i=0;i<size;i++){
-            try {
-                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
-                TextView nameView =(TextView) child.getChildAt(2);
-                TextView addressView =(TextView) child.getChildAt(3);
-
-                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
-                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
-
-                nameView.setText((String)jsonChild.get("name"));
-                addressView.setText((String)jsonChild.get("address"));
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+            SharedPreferences preferences = getSharedPreferences("destination"+String.valueOf(i+1),Context.MODE_PRIVATE);
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            TextView nameView =(TextView) child.getChildAt(2);
+            TextView addressView =(TextView) child.getChildAt(3);
+            nameView.setText(preferences.getString("name","destination"+String.valueOf(i+1)));
+            addressView.setText(preferences.getString("address","address"+String.valueOf(i+1)));
         }
     }
     //destination setting alert show
@@ -404,10 +394,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
-                utils.writejson(myDir,
-                        currentLayout.getContentDescription().toString(),
-                        destEdit.getText().toString(),
-                        addressEdit.getText().toString());
+                String[] destInfo = {destEdit.getText().toString(),addressEdit.getText().toString(),"email"};
+                utils.setDestinationPreference(getSharedPreferences(dest_id,Context.MODE_PRIVATE),destInfo);
             }
 
         });

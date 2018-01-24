@@ -1,6 +1,8 @@
 package com.example.junyeong.rocketcopy;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,10 +21,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.util.Set;
+
 public class ScheduleAddActivity extends AppCompatActivity {
     Spinner spinner;
     int spinnum=0;
     int DAY=0,HOUR1=1,MIN1=2,HOUR2=3,MIN2=4;
+    String lecture;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,11 +35,10 @@ public class ScheduleAddActivity extends AppCompatActivity {
         LinearLayout linearLayout = findViewById(R.id.schedule_add_layout);
         addTime(linearLayout);
         Intent intent = getIntent();
-        String jsonstr = intent.getStringExtra("json Data");
-        if(jsonstr != null){
-            decodeJson(jsonstr);
+        lecture = intent.getStringExtra("lecture");
+        if(lecture!=null){
+            decodePreference();
         }
-
     }
     public RelativeLayout addSpinner(RelativeLayout relativeLayout,int Array_id){
         RelativeLayout.LayoutParams params =
@@ -176,48 +180,58 @@ public class ScheduleAddActivity extends AppCompatActivity {
             }
             intent.putExtra("Lecture"+Integer.toString(i/5+1 - removeCount),lec_time);
         }
+        if(this.lecture!=null){
+            //delete all information of lecture(old information)
+            SharedPreferences preferences = getSharedPreferences(this.lecture,Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor= preferences.edit();
+            editor.clear().apply();
+            //delete key of this lecture(may be old key)
+            preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
+            Set<String> lectures = preferences.getStringSet("lectures",null);
+            if(lectures!=null)
+                lectures.remove(this.lecture);
+            editor = preferences.edit();
+            editor.putStringSet("lectures",lectures);
+        }
         intent.putExtra("Lecture_name",lecture_text);
         intent.putExtra("Lecture_professor",professor_text);
         intent.putExtra("Lecture_size",spinnum/5 - removeCount);
         setResult(RESULT_OK,intent);
         finish();
     }
+    public void decodePreference(){
+        String[] lectureInfo = new String[3];
+        lectureInfo[0] = lecture;
+        SharedPreferences preferences = getSharedPreferences(lecture, Context.MODE_PRIVATE);
+        lectureInfo[1] = preferences.getString("professor","");
+        lectureInfo[2] = preferences.getString("color","000000");
+        //set textview for lecture name and professor name
+        TextView lectureTextView = findViewById(R.id.lecture);
+        TextView professorTextView = findViewById(R.id.professor);
+        lectureTextView.setText(lectureInfo[0]);
+        professorTextView.setText(lectureInfo[1]);
+        //remove layout(created at onCreate)
+        LinearLayout rootLayout = findViewById(R.id.schedule_add_layout);
+        RelativeLayout relativeLayout = (RelativeLayout)rootLayout.getChildAt(2);
+        deleteLayout(relativeLayout);
 
-    public void decodeJson(String jsonstr){
-        try {
-            //get lecture name and professor name
-            JSONObject jsonObject = new JSONObject(jsonstr);
-            JSONArray scheduleJsonArray = jsonObject.getJSONArray("schedule");
-            String[] lectureInfo = {jsonObject.get("lecture").toString(),
-                    jsonObject.get("professor").toString(),
-                    jsonObject.get("color").toString()};
-            //set textview for lecture name and professor name
-            TextView lectureTextView = findViewById(R.id.lecture);
-            TextView professorTextView = findViewById(R.id.professor);
-            lectureTextView.setText(lectureInfo[0]);
-            professorTextView.setText(lectureInfo[1]);
-            //remove layout(created at onCreate)
-            LinearLayout rootLayout = findViewById(R.id.schedule_add_layout);
-            RelativeLayout relativeLayout = (RelativeLayout)rootLayout.getChildAt(2);
-            deleteLayout(relativeLayout);
-            //spinners setting
-            for(int i=0; i<scheduleJsonArray.length();i++) {
-                //get time informations
-                JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(i);
-                Integer[] timeInfo = {timeJsonInfo.getInt("day")-1,
-                        timeJsonInfo.getInt("hour1")-9,
-                        timeJsonInfo.getInt("min1"),
-                        timeJsonInfo.getInt("hour2")-9,
-                        timeJsonInfo.getInt("min2")};
-                //set time informations
-                addTime(rootLayout);
-                RelativeLayout layout = (RelativeLayout) rootLayout.getChildAt(rootLayout.getChildCount()-2);
-                for(int j=0;j<5;j++){
-                    Spinner spinner = (Spinner)layout.getChildAt(j*2);
-                    spinner.setSelection(timeInfo[j]);
-                }
+        //spinners setting
+        int size = preferences.getInt("size",0);
+        for(int i=0; i<size;i++) {
+            //get time informations
+            Integer[] timeInfo = {preferences.getInt("day"+i,1)-1,
+                    preferences.getInt("Shour"+i,9)-9,
+                    preferences.getInt("Smin"+i,0),
+                    preferences.getInt("Ehour"+i,9)-9,
+                    preferences.getInt("Emin"+i,0)};
+            //set time informations
+            addTime(rootLayout);
+            RelativeLayout layout = (RelativeLayout) rootLayout.getChildAt(rootLayout.getChildCount()-2);
+            for(int j=0;j<5;j++){
+                Spinner spinner = (Spinner)layout.getChildAt(j*2);
+                spinner.setSelection(timeInfo[j]);
             }
-        }catch (Exception e){ e.printStackTrace();}
+        }
     }
 }
 

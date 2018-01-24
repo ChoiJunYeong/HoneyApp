@@ -2,6 +2,7 @@ package com.example.junyeong.rocketcopy;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.support.v7.app.AlertDialog;
 import android.util.TypedValue;
 import android.view.View;
@@ -125,5 +126,12 @@ public class Utils {
             value += unitValue;
         }
         return value;
+    }
+    public void setDestinationPreference(SharedPreferences preference,String[] destInfo){
+        SharedPreferences.Editor editor = preference.edit();
+        editor.putString("name",destInfo[0]);
+        editor.putString("address",destInfo[1]);
+        editor.putString("type",destInfo[2]);
+        editor.commit();
     }
 }

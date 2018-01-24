@@ -31,6 +31,9 @@ public class FolderIconItemView extends LinearLayout {
         imageView = (ImageView) findViewById(R.id.folder_icon);
     }
     public void setTag(String text){
+        textView.setContentDescription(text);
+        if(text.length()>8)
+            text = text.substring(0,6) + "...";
         textView.setText(text);
     }
     public void setImageView(){

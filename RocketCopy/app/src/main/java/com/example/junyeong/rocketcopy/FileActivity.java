@@ -3,6 +3,7 @@ package com.example.junyeong.rocketcopy;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.NavigationView;
@@ -33,6 +34,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Set;
 
 import static com.example.junyeong.rocketcopy.Utils.*;
 
@@ -46,6 +48,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     ArrayList<String> selectedFoldernames;
     RelativeLayout currentLayout;
     DialogInterface dialogInterface;
+    String dest_id;
     int selectedColor = 0x222222,state = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,29 +175,19 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
             child.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    dest_id="destination" + view.getContentDescription();
                     redefineDestination((RelativeLayout)view);
                 }
             });
         }
-        //set textview according to json file
-        File jsonFile = new File(myDir,"destInfo.json");
-        if(!jsonFile.exists())
-            return;
+
         for(int i=0;i<size;i++){
-            try {
-                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
-                TextView nameView =(TextView) child.getChildAt(2);
-                TextView addressView =(TextView) child.getChildAt(3);
-
-                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
-                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
-
-                nameView.setText((String)jsonChild.get("name"));
-                addressView.setText((String)jsonChild.get("address"));
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+            SharedPreferences preferences = getSharedPreferences("destination"+String.valueOf(i+1),Context.MODE_PRIVATE);
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            TextView nameView =(TextView) child.getChildAt(2);
+            TextView addressView =(TextView) child.getChildAt(3);
+            nameView.setText(preferences.getString("name","destination"+String.valueOf(i+1)));
+            addressView.setText(preferences.getString("address","address"+String.valueOf(i+1)));
         }
     }
     //destination setting alert show
@@ -275,10 +268,8 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
-                utils.writejson(myDir,
-                        currentLayout.getContentDescription().toString(),
-                        destEdit.getText().toString(),
-                        addressEdit.getText().toString());
+                String[] destInfo ={destEdit.getText().toString(),addressEdit.getText().toString(),"email"};
+                utils.setDestinationPreference(getSharedPreferences(dest_id,Context.MODE_PRIVATE),destInfo);
             }
 
         });
@@ -292,8 +283,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void loadFolders(){
-        //set filefilter for find json and image
-        FilenameFilter jsonFilenameFilter = utils.jsonFilenameFilter;
+        //set filefilter for find image
         FilenameFilter imageFilenameFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -306,6 +296,8 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
         rootLayout.setNumColumns(1);
         rootLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
         File[] allFolder = utils.sortByname(myDir.listFiles());
+        SharedPreferences preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
+        Set<String> lectures= preferences.getStringSet("lectures",null);
         for(File folder : allFolder) {
             if (folder.isDirectory()) {
                 FolderItem folderItem = new FolderItem();
@@ -315,7 +307,7 @@ public class FileActivity extends AppCompatActivity implements NavigationView.On
                 folderItem.setFilenum(String.valueOf(imageFolder.listFiles(imageFilenameFilter).length));
                 folderItem.setFoldername(folder.getName());
                 //is item of scheduler
-                if (folder.listFiles(jsonFilenameFilter).length!=0) {
+                if (lectures.contains(folder.getName())) {
                     folderItem.setFoldertype(utils.SCHEDULE);
                 }
                 //isn't item of scheduler

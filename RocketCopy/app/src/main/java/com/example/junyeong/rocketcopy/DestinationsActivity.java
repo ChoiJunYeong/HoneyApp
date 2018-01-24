@@ -59,7 +59,7 @@ import java.util.zip.Inflater;
 
 public class DestinationsActivity extends AppCompatActivity {
     RelativeLayout currentLayout;
-    String destination,address;
+    String destination,address,dest_id;
     String filepath = Environment.getExternalStorageDirectory().toString() + "/honeyA";
     File myDir = new File(filepath);
     DialogInterface dialogInterface;
@@ -112,28 +112,19 @@ public class DestinationsActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     redefineDestination((RelativeLayout)view);
+                    dest_id = "destination"+view.getContentDescription();
                 }
             });
         }
-        //set textview according to json file
-        File jsonFile = new File(myDir,"destInfo.json");
-        if(!jsonFile.exists())
-            return;
+        //set textview according to sharedpreference
         for(int i=0;i<size;i++){
-            try {
-                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
-                TextView nameView =(TextView) child.getChildAt(2);
-                TextView addressView =(TextView) child.getChildAt(3);
+            SharedPreferences preferences = getSharedPreferences("destination"+String.valueOf(i+1),Context.MODE_PRIVATE);
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            TextView nameView =(TextView) child.getChildAt(2);
+            TextView addressView =(TextView) child.getChildAt(3);
+            nameView.setText(preferences.getString("name","destination"+String.valueOf(i+1)));
+            addressView.setText(preferences.getString("address","address"+String.valueOf(i+1)));
 
-                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
-                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
-
-                nameView.setText((String)jsonChild.get("name"));
-                addressView.setText((String)jsonChild.get("address"));
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
         }
     }
     //destination setting alert show
@@ -200,10 +191,8 @@ public class DestinationsActivity extends AppCompatActivity {
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
-                utils.writejson(myDir,
-                                currentLayout.getContentDescription().toString(),
-                                destEdit.getText().toString(),
-                                addressEdit.getText().toString());
+                String[] destInfo = {destEdit.getText().toString(),addressEdit.getText().toString(),"email"};
+                utils.setDestinationPreference(getSharedPreferences(dest_id,Context.MODE_PRIVATE),destInfo);
             }
 
         });

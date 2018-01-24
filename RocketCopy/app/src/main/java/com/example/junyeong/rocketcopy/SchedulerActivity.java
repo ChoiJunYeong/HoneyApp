@@ -3,6 +3,7 @@ package com.example.junyeong.rocketcopy;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
@@ -46,6 +47,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.example.junyeong.rocketcopy.Utils.*;
@@ -65,6 +67,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     static int week = 8;
     private Menu menu;
     RelativeLayout currentLayout;
+    String dest_id;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -236,7 +239,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         LinearLayout otherviewLayout = findViewById(R.id.otherviewLayout);
         otherviewLayout.removeAllViews();
         GridView gridView = findViewById(R.id.folder_icon);
-        gridView.removeAllViews();
+        gridView.setAdapter(null);
 
             /*변경하고 싶은 레이아웃의 파라미터 값을 가져 옴*/
         RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) otherviewLayout.getLayoutParams();
@@ -282,28 +285,19 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             child.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    dest_id="destination" + view.getContentDescription();
                     redefineDestination((RelativeLayout)view);
                 }
             });
         }
-        //set textview according to json file
-        File jsonFile = new File(myDir,"destInfo.json");
-        if(!jsonFile.exists())
-            return;
         for(int i=0;i<size;i++){
-            try {
-                RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
-                TextView nameView =(TextView) child.getChildAt(2);
-                TextView addressView =(TextView) child.getChildAt(3);
+            SharedPreferences preferences = getSharedPreferences("destination" + String.valueOf(i+1),Context.MODE_PRIVATE);
+            RelativeLayout child = (RelativeLayout) rootLayout.getChildAt(i);
+            TextView nameView =(TextView) child.getChildAt(2);
+            TextView addressView =(TextView) child.getChildAt(3);
+            nameView.setText(preferences.getString("name","destination"+String.valueOf(i+1)));
+            addressView.setText(preferences.getString("address","address"+String.valueOf(i+1)));
 
-                JSONObject jsonObject = new JSONObject(utils.readJSON(jsonFile));
-                JSONObject jsonChild = (JSONObject)jsonObject.get(String.valueOf(i));
-                nameView.setText((String)jsonChild.get("name"));
-                addressView.setText((String)jsonChild.get("address"));
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
         }
     }
     //destination setting alert show
@@ -370,10 +364,8 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 TextView textView2 = (TextView) currentLayout.getChildAt(3);
                 textView1.setText(destEdit.getText());
                 textView2.setText(addressEdit.getText());
-                utils.writejson(myDir,
-                        currentLayout.getContentDescription().toString(),
-                        destEdit.getText().toString(),
-                        addressEdit.getText().toString());
+                String[] destInfo = {destEdit.getText().toString(),addressEdit.getText().toString(),"email"};
+                utils.setDestinationPreference(getSharedPreferences(dest_id,Context.MODE_PRIVATE),destInfo);
             }
 
         });
@@ -421,30 +413,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         }
         return false;
     }
-    //json파일로 시간표 정보를 로컬에 저장하는 함수
-    public String jsonwriting(String name, String professor,String color, int size, Integer[][] timedata){
-        JSONObject jsonObject = new JSONObject();
-        JSONArray times = new JSONArray();
-        try {
-            jsonObject.put("color", Integer.parseInt(color));
-            jsonObject.put("lecture", name);
-            jsonObject.put("professor",professor);
-            for(int i=0;i<size;i++) {
-                JSONObject time = new JSONObject();
-                time.put("day",timedata[i][0]);
-                time.put("hour1",timedata[i][1]);
-                time.put("min1",timedata[i][2]);
-                time.put("hour2",timedata[i][3]);
-                time.put("min2",timedata[i][4]);
-                times.put(time);
-            }
-            jsonObject.put("schedule",times);
-            return jsonObject.toString();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
     //make hashMap from intent data
     public HashMap<Integer[],String[]> getHashMap(Intent intent,boolean toAdded) {
         int[] colors = {Color.BLUE, Color.RED, Color.YELLOW, Color.CYAN, Color.GREEN, Color.MAGENTA}; //color list of scheduler
@@ -489,36 +457,53 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             result.put(timeInfo, lectureInfo);
             timedata[i - 1] = timeInfo;
         }
-        try {
-            if (toAdded && isOverlapOther(lectureInfo, result)) {
-                return null;
-            }
-            File subDir = new File(myDir, lectureInfo[0]);
 
-            //폴더 있는지 체크하고 만듫기
-            if (!subDir.mkdirs())
-                if (!subDir.getParentFile().exists())
-                    Toast.makeText(this, "Error" + subDir.getParent(), Toast.LENGTH_SHORT).show();
-            if (!subDir.mkdir())
-                if (!subDir.exists())
-                    Toast.makeText(this, "Error" + subDir.toString(), Toast.LENGTH_SHORT).show();
-            //이미지 폴더 생성
-            File imgfolder = new File(subDir,"images");
-            if (!imgfolder.mkdir())
-                if (!imgfolder.exists())
-                    Toast.makeText(this, "Error" + imgfolder.toString(), Toast.LENGTH_SHORT).show();
-
-            String jsonStr = jsonwriting(lectureInfo[0], lectureInfo[1], lectureInfo[2], size, timedata);
-            File jsonFile = new File(subDir, "timesheet.json");
-            FileWriter fileWriter = new FileWriter(jsonFile);
-
-            fileWriter.write(jsonStr);
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (IOException e) {
-            Toast.makeText(this, "json save failed", Toast.LENGTH_SHORT).show();
+        if (toAdded && isOverlapOther(lectureInfo, result)) {
+            return null;
         }
+        File subDir = new File(myDir, lectureInfo[0]);
+
+        //폴더 있는지 체크하고 만듫기
+        if (!subDir.mkdirs())
+            if (!subDir.getParentFile().exists())
+                Toast.makeText(this, "Error" + subDir.getParent(), Toast.LENGTH_SHORT).show();
+        if (!subDir.mkdir())
+            if (!subDir.exists())
+                Toast.makeText(this, "Error" + subDir.toString(), Toast.LENGTH_SHORT).show();
+        //이미지 폴더 생성
+        File imgfolder = new File(subDir,"images");
+        if (!imgfolder.mkdir())
+            if (!imgfolder.exists())
+                Toast.makeText(this, "Error" + imgfolder.toString(), Toast.LENGTH_SHORT).show();
+        //save data as sharedpreperence
+        saveAppdata(lectureInfo[0], lectureInfo[1], lectureInfo[2], size, timedata);
         return result;
+    }
+    public void saveAppdata(String name, String professor,String color, int size, Integer[][] timedata){
+        SharedPreferences preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Set<String> lectures= preferences.getStringSet("lectures",null);
+        //add lecture name
+        if(lectures==null)
+            lectures = new HashSet<String>();
+        if(!lectures.contains(name))
+            lectures.add(name);
+        editor.putStringSet("lectures",lectures);
+        editor.commit();
+
+        preferences = getSharedPreferences(name,Context.MODE_PRIVATE);
+        editor = preferences.edit();
+        editor.putString("professor",professor);
+        editor.putString("color",color);
+        editor.putInt("size",size);
+        for(int i=0;i<size;i++){
+            editor.putInt("day"+i,timedata[i][0]);
+            editor.putInt("Shour"+i,timedata[i][1]);
+            editor.putInt("Smin"+i,timedata[i][2]);
+            editor.putInt("Ehour"+i,timedata[i][3]);
+            editor.putInt("Emin"+i,timedata[i][4]);
+        }
+        editor.commit();
     }
     //시간표를 보여주는 TextView를 적절한 위치에 생성한다.
     public void setScheduleTextView(HashMap<Integer[],String[]> newSchedule){
@@ -603,10 +588,11 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     public void loadFolders(){
         iconAdapter = new FolderIconAdapter();
         GridView gridView = findViewById(R.id.folder_icon);
+        SharedPreferences preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
+        Set<String> schedules = preferences.getStringSet("lectures",new HashSet<String>());
         //set adapter
         for(File folder : myDir.listFiles()){
-            File timesheet = new File(folder,"/timesheet.json");
-            if(timesheet.exists())
+            if(schedules.contains(folder.getName()))
                 continue;
             FolderIconItem folderIconItem = new FolderIconItem();
             folderIconItem.setTag(folder.getName());
@@ -756,10 +742,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 public void onClick(View view) {
                     Intent intent = new Intent(getApplicationContext(),ScheduleAddActivity.class);
                     //put extras for load information
-                    TextView textView = (TextView)view;
-                    File file = new File(filepath,textView.getText().toString());
-                    String jsonstr = utils.readJSON(new File(file,"timesheet.json"));
-                    intent.putExtra("json Data",jsonstr);
+                    intent.putExtra("lecture",((TextView) view).getText().toString());
                     startActivityForResult(intent, MODE_MODIFY);
                 }
             });
@@ -861,38 +844,34 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    //change json file to string 'simply'
     public HashMap<Integer[],String[]> getScheduleList(){
         File[] directories = myDir.listFiles();
         HashMap<Integer[],String[]> result = new HashMap<>();
         //check directory available
         for(File directory : directories){
             if(directory.isDirectory()){
-                File[] files = directory.listFiles();
-                //find folder contain timesheet.json file
-                for(File file : files)
-                    if(file.toString().contains("timesheet.json")){
-                        //decode json file, mapping <position,{lecture,professor,color}>
-                        String jsonStr = utils.readJSON(file);
-                        try {
-                            JSONObject jsonObject = new JSONObject(jsonStr);
-                            JSONArray scheduleJsonArray = jsonObject.getJSONArray("schedule");
-                            String[] lectureInfo = {jsonObject.get("lecture").toString(),
-                                    jsonObject.get("professor").toString(),
-                                    jsonObject.get("color").toString()};
-                            for(int i=0; i<scheduleJsonArray.length();i++) {
-                                JSONObject timeJsonInfo = scheduleJsonArray.getJSONObject(i);
-                                Integer[] timeInfo = {timeJsonInfo.getInt("day"),
-                                        timeJsonInfo.getInt("hour1"),
-                                        timeJsonInfo.getInt("min1"),
-                                        timeJsonInfo.getInt("hour2"),
-                                        timeJsonInfo.getInt("min2")};
-                                result.put(timeInfo, lectureInfo);
-                            }
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
+                SharedPreferences preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
+                Set<String> lectures = preferences.getStringSet("lectures",null);
+                if(lectures == null)
+                    return null;
+                for(String lecture : lectures){
+                    String[] lectureInfo = new String[3];
+                    lectureInfo[0] = lecture;
+                    preferences = getSharedPreferences(lecture,Context.MODE_PRIVATE);
+                    lectureInfo[1] = preferences.getString("professor","");
+                    lectureInfo[2] = preferences.getString("color","000000");
+
+                    int size = preferences.getInt("size",0);
+                    for(int i=0;i<size;i++){
+                        Integer[] timeInfo = new Integer[5];
+                        timeInfo[0] = preferences.getInt("day"+i,0);
+                        timeInfo[1] = preferences.getInt("Shour"+i,0);
+                        timeInfo[2] = preferences.getInt("Smin"+i,0);
+                        timeInfo[3] = preferences.getInt("Ehour"+i,0);
+                        timeInfo[4] = preferences.getInt("Emin"+i,0);
+                        result.put(timeInfo,lectureInfo);
                     }
+                }
             }
         }
         if(result.size()==0)
