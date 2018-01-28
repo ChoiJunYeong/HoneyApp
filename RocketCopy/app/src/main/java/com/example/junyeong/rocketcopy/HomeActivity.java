@@ -223,7 +223,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 setSelectMode();
                 break;
             case R.id.action_delete:
-                checkDelete_Select();
+                select_All();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -408,43 +408,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
-
-    public class History_gallery_Adapter extends BaseAdapter {
-        ArrayList<History_gallery> items = new ArrayList<History_gallery>();
-
-        @Override
-        public int getCount(){
-            return items.size();
-        }
-        public void addItem(History_gallery item){
-            items.add(item);
-        }
-        @Override
-        public Object getItem(int position){
-            return items.get(position);
-        }
-        @Override
-        public long getItemId(int position){
-            return position;
-        }
-        @Override
-        public View getView(int position, View convertView, ViewGroup viewGroup){
-            History_gallery_View view = new History_gallery_View(getApplicationContext());
-            History_gallery item = items.get(position);
-            view.setImage(item.getImg());
-            view.setTag(item.getTag());
-            view.setContentDescription(item.getTag());
-            view.setBackgroundColor(getColor(R.color.pure));
-            if(selectedFiles.contains(item.getTag()))
-                view.setBackgroundColor(getColor(R.color.select));
-            return view;
-        }
-        @Override
-        public boolean isEnabled(int i){
-            return true;
-        }
-    }
-
     public void showHistory(){
 
 
@@ -592,30 +555,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         dialog.show();
     }
 
-    public void checkDelete_Select(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete");
-        builder.setTitle("Are you sure you want to delete selected scan(s)?");
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                for(String element : selectedFiles){
-                    File file = new File(filepath,element);
-                    file.delete();
-                    showHistory();
-                }
-                selectedFiles.clear();
-                setNormalMode();
+    public void select_All(){
+        for(View view : adapter.item_views){
+            if(!selectedFiles.contains(view.getContentDescription().toString())){
+                selectedFiles.add(view.getContentDescription().toString());
+                view.setBackgroundColor(getColor(R.color.select));
             }
-        });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                return;
-            }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        }
     }
     public void deleteDirectoryChild(File folder){
         for(File child : folder.listFiles()){
@@ -875,6 +821,45 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onConnectionSuspended(int i) {
 
+    }
+
+    public class History_gallery_Adapter extends BaseAdapter {
+        ArrayList<History_gallery> items = new ArrayList<History_gallery>();
+        ArrayList<View> item_views = new ArrayList<View>();
+        @Override
+        public int getCount(){
+            return items.size();
+        }
+        public void addItem(History_gallery item){
+            items.add(item);
+        }
+        @Override
+        public Object getItem(int position){
+            return items.get(position);
+        }
+        @Override
+        public long getItemId(int position){
+            return position;
+        }
+        @Override
+        public View getView(int position, View convertView, ViewGroup viewGroup){
+            History_gallery_View view = new History_gallery_View(getApplicationContext());
+            History_gallery item = items.get(position);
+            view.setImage(item.getImg());
+            view.setTag(item.getTag());
+            view.setContentDescription(item.getTag());
+            view.setBackgroundColor(getColor(R.color.pure));
+            if(selectedFiles.contains(item.getTag()))
+                view.setBackgroundColor(getColor(R.color.select));
+            if(item_views.contains(view))
+                item_views.remove(view);
+            item_views.add(view);
+            return view;
+        }
+        @Override
+        public boolean isEnabled(int i){
+            return true;
+        }
     }
 
 }

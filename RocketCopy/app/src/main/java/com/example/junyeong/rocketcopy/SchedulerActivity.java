@@ -591,7 +591,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         SharedPreferences preferences = getSharedPreferences("schedule",Context.MODE_PRIVATE);
         Set<String> schedules = preferences.getStringSet("lectures",new HashSet<String>());
         //set adapter
-        for(File folder : myDir.listFiles()){
+        for(File folder : utils.sortByname(myDir.listFiles())){
             if(schedules.contains(folder.getName()))
                 continue;
             FolderIconItem folderIconItem = new FolderIconItem();
