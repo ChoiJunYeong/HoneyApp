@@ -1,5 +1,5 @@
 package com.example.honeya.honeya;
-
+//TODO scheduler can set min. Make drawble follow as schedule information
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,12 +39,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -58,7 +61,6 @@ import static com.example.honeya.honeya.Utils.*;
 
 public class SchedulerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
     GridView schedule;
-    SchedulerAdapter adapter;
     FolderIconAdapter iconAdapter;
     ArrayList<String> deleteFiles = new ArrayList<>();
     Set<String> schedules = null;
@@ -90,6 +92,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         setSupportActionBar(toolbar);
         //load scheduler
         scheduleHashMap = getScheduleList();
+        loadFolders();
         loadScheduler();
         setScheduleTextView(scheduleHashMap);
 
@@ -514,55 +517,32 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     public void setScheduleTextView(HashMap<Integer[],String[]> newSchedule){
         LinearLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
         scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
-        //get display width and height
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        float HEIGHT = displayMetrics.heightPixels;
-        float WIDTH = displayMetrics.widthPixels;
         //get folderview height
         GridView gridView = findViewById(R.id.folder_icon);
         View folderIconItem =  iconAdapter.getView(0, null, gridView);
         folderIconItem.measure(0,0);
-        //set height and width of each scheduler cell
-        WIDTH = WIDTH/7;
-        float HEIGHT_HOUR = (HEIGHT-utils.getStatusBarSize(this)- folderIconItem.getMeasuredHeight()*2)/10;
-        float HEIGHT_MIN = HEIGHT_HOUR/4;
-
         if(newSchedule==null)
             return;
-
-
         for(Integer[] newScheduleUnit : newSchedule.keySet() ){
-
-            TextView textView = new TextView(this);
             String[] scheduleInfo = newSchedule.get(newScheduleUnit);
-
-            textView.setBackgroundColor(Integer.parseInt(scheduleInfo[2]));
-
-            textView.setText(scheduleInfo[0]);
-            textView.setTextColor(getResources().getColor(R.color.black));
-            textView.setTextSize(WIDTH/10);
-
-            textView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    TextView text = (TextView) view;
-                    if(text.getText()==null)
-                        return;
-                    showItem(filepath + "/"+ (String)text.getText());
+            for(int col = newScheduleUnit[1]-8;col<newScheduleUnit[3]-8;col++){
+                TableRow textViewSet = (TableRow)((TableLayout)findViewById(R.id.schedule)).getChildAt(col);
+                TextView textView = (TextView) textViewSet.getChildAt(newScheduleUnit[0]);
+                textView.setBackgroundColor(Integer.parseInt(scheduleInfo[2]));
+                if(col==newScheduleUnit[1]-8) {
+                    textView.setText(scheduleInfo[0]);
+                    textView.setTextColor(getResources().getColor(R.color.black));
                 }
-            });
-
-            textView.setX(newScheduleUnit[0]*WIDTH);
-            textView.setY((newScheduleUnit[1]-8)*HEIGHT_HOUR + (newScheduleUnit[2]/15)*HEIGHT_MIN);
-
-            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-            float width = WIDTH;
-            float height = (newScheduleUnit[3]-newScheduleUnit[1])*HEIGHT_HOUR + (newScheduleUnit[4]/15-newScheduleUnit[2]%15)*HEIGHT_MIN;
-            int temp = Math.round(WIDTH);
-            textView.setLayoutParams(new ViewGroup.LayoutParams(Math.round(width),Math.round(height)));
-
-            scheduleParentLayout.addView(textView);
+                textView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        TextView text = (TextView) view;
+                        if(text.getText()==null)
+                            return;
+                        showItem(filepath + "/"+ (String)text.getText());
+                    }
+                });
+            }
         }
     }
 
@@ -576,25 +556,42 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             textView.setVisibility(View.VISIBLE);
         }
         //load schedule
-        schedule = (GridView) findViewById(R.id.schedule);
-        schedule.setNumColumns(week);
-        adapter = new SchedulerAdapter();
-        for(int i=0;i<week;i++) {
-            ScheduleWeekItem item = new ScheduleWeekItem();
-            adapter.addItem(item);
-        }
-        for(int i=0;i<10*week;i++) {
-            ScheduleItem item = new ScheduleItem();
-            adapter.addItem(item);
-        }
-        schedule.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            }
-        });
+        TableLayout scheduleLayout  = findViewById(R.id.schedule);
 
-        schedule.setAdapter(adapter);
-        loadFolders();
+        //get display height
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int HEIGHT = (displayMetrics.heightPixels
+                        - ((RelativeLayout.LayoutParams)((GridView)findViewById(R.id.folder_icon)).getLayoutParams()).height
+                        - utils.getStatusBarSize(this))/11;
+        int WIDTH = displayMetrics.widthPixels/week;
+
+        String[] days = {"","MON","TUE","WED","THU","FRI","SAT"};
+
+        for(int col=0;col<11;col++){
+            TableRow tableRow = new TableRow(this);
+            for(int row=0;row<week;row++){
+                TextView view = new TextView(this);
+                //view.setLayoutParams(params);
+                view.setBackground(getResources().getDrawable(R.drawable.border_square));
+                tableRow.addView(view);
+                TableRow.LayoutParams params = (TableRow.LayoutParams)view.getLayoutParams();
+                if(row==0) {
+                    view.setText(String.valueOf(col)+"교시");
+                }
+                params.height=HEIGHT;
+                params.width=WIDTH;
+                if(col==0){
+                    view.setText(days[row]);
+                    view.setTextColor(getResources().getColor(R.color.OrangeHoney));
+                    params.height=ViewGroup.LayoutParams.WRAP_CONTENT;
+                    params.width=WIDTH;
+                }
+                view.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                view.setLayoutParams(params);
+            }
+            scheduleLayout.addView(tableRow);
+        }
     }
     //folder list using gridview custom adapter
     public void loadFolders(){
@@ -629,11 +626,9 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         });
         //set height
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)gridView.getLayoutParams();
-        if(adapter.getCount() != 0) {
-            View folderIconItem =  iconAdapter.getView(0, null, gridView);
-            folderIconItem.measure(0,0);
-            params.height = folderIconItem.getMeasuredHeight()*2;
-        }
+        View folderIconItem =  iconAdapter.getView(0, null, gridView);
+        folderIconItem.measure(0,0);
+        params.height = folderIconItem.getMeasuredHeight()*2;
         gridView.setLayoutParams(params);
     }
 
@@ -876,72 +871,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-    }
-    //adapter for grid
-    public class SchedulerAdapter extends BaseAdapter {
-        ArrayList<ScheduleItem> items = new ArrayList<ScheduleItem>();
-        ArrayList<ScheduleWeekItem> weekitems = new ArrayList<ScheduleWeekItem>();
-        String[] days={" ","MON","TUE","WED","THU","FRI","SAT"};
-        @Override
-        public int getCount(){return items.size()+weekitems.size();}
-        @Override
-        public Object getItem(int arg){
-            if(arg<week)
-                return weekitems.get(arg);
-            else
-                return items.get(arg-week);
-        }
-        @Override
-        public long getItemId(int arg){
-            return arg;
-        }
-        public void addItem(ScheduleItem item){
-            items.add(item);
-        }
-        public void addItem(ScheduleWeekItem item){
-            weekitems.add(item);
-        }
-        @Override
-        public View getView(int position, View oldView, ViewGroup parent){
-            if(position<week){
-                ScheduleItemView view = new ScheduleItemView(getApplicationContext(),R.layout.schedule_week_item);
-                ScheduleWeekItem item = weekitems.get(position);
-                view.setTag(days[position]);
-                return view;
-            }
-            else{
-                ScheduleItemView view = new ScheduleItemView(getApplicationContext());
-                ScheduleItem item = items.get(position-week);
-                if(position%7==0) {
-                    String time = Integer.toString(position / week) + "교시";
-                    view.setTag(time);
-                }
-                ViewGroup.LayoutParams param = parent.getLayoutParams();
-
-                //get display height
-                DisplayMetrics displayMetrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                int HEIGHT = displayMetrics.heightPixels;
-                //get folderview height
-                GridView gridView = findViewById(R.id.folder_icon);
-                View folderIconItem =  iconAdapter.getView(0, null, gridView);
-                folderIconItem.measure(0,0);
-                //set height and width of each scheduler cell
-                int HEIGHT_HOUR = (HEIGHT-utils.getStatusBarSize(getApplicationContext())- folderIconItem.getMeasuredHeight()*2-100)/10;
-                param.height = (int)HEIGHT_HOUR;
-                view.setLayoutParams(param);
-                return view;
-            }
-
-
-        }
-        @Override
-        public boolean isEnabled(int i){
-            if(i==0)
-                return false;
-            else
-                return true;
         }
     }
     //adapter show all folders
