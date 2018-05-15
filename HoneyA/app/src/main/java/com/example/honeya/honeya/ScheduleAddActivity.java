@@ -4,8 +4,10 @@ package com.example.honeya.honeya;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -26,6 +28,7 @@ import java.util.Set;
 
 public class ScheduleAddActivity extends AppCompatActivity {
     Spinner spinner;
+    Utils utils;
     int spinnum=0;
     int DAY=0,HOUR1=1,MIN1=2,HOUR2=3,MIN2=4;
     String lecture;
@@ -40,6 +43,7 @@ public class ScheduleAddActivity extends AppCompatActivity {
         if(lecture!=null){
             decodePreference();
         }
+        TextView saveButton = (TextView) findViewById(R.id.confirm);
     }
     public RelativeLayout addSpinner(RelativeLayout relativeLayout,int Array_id){
         RelativeLayout.LayoutParams params =
@@ -50,7 +54,6 @@ public class ScheduleAddActivity extends AppCompatActivity {
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 Array_id, android.R.layout.simple_spinner_item);
         Spinner sp = new Spinner(this);
-        sp.setBackground(getResources().getDrawable(android.R.drawable.edit_text));
         sp.setAdapter(adapter);
         sp.setId(spinnum);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -78,7 +81,6 @@ public class ScheduleAddActivity extends AppCompatActivity {
     }
     public RelativeLayout addSpinnerText(RelativeLayout relativeLayout,String text){
         TextView textView = new TextView(this);
-        textView.setTextColor(getColor(R.color.black));
         RelativeLayout.LayoutParams params =
                 new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
@@ -109,7 +111,8 @@ public class ScheduleAddActivity extends AppCompatActivity {
         relativeLayout = addSpinnerText(relativeLayout,"분");
         //add delete button
         ImageButton imageButton = new ImageButton(this);
-        imageButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_delete));
+        imageButton.setImageDrawable(getResources().getDrawable(R.drawable.trash_small));
+        imageButton.setBackgroundColor(getResources().getColor(R.color.pure));
         relativeLayout.addView(imageButton);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.addRule(RelativeLayout.ALIGN_PARENT_END);
@@ -154,7 +157,7 @@ public class ScheduleAddActivity extends AppCompatActivity {
         else
             return false;
     }
-    public void saveItem(View view){
+    public void save(View view){
         //save item
         Intent intent= new Intent();
         EditText professor,lecture;
@@ -235,4 +238,3 @@ public class ScheduleAddActivity extends AppCompatActivity {
         }
     }
 }
-

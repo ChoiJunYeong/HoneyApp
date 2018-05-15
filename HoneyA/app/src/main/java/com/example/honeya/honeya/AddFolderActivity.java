@@ -59,7 +59,7 @@ public class AddFolderActivity extends AppCompatActivity {
             }catch (Exception e){ e.printStackTrace();}
         }
     }
-    public void saveItem(View view){
+    public void save(View view){
         EditText editName = findViewById(R.id.nameEdit);
         EditText editMemo = findViewById(R.id.memoEdit);
         File folder = new File(myDir, editName.getText().toString());

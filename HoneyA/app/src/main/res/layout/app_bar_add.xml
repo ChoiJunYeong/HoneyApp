@@ -17,12 +17,13 @@
             android:layout_height="match_parent">
 
             <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar_add"
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
+                android:background="#FFFFFF"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:titleTextColor="@color/black" />
+                app:titleTextColor="@color/black"
+                app:title="시간표 추가"/>
 
             <TextView
                 android:id="@+id/confirm"
@@ -30,11 +31,17 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:onClick="saveItem"
+                android:layout_marginEnd="21dp"
                 android:background="@drawable/text_button"
-                android:text="저장"
-                android:textColor="@color/black"
-                android:textSize="30sp"
+                android:gravity="center"
+                android:onClick="save"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="  저장  "
+                android:textColor="@color/white"
+                android:textSize="12dp"
                 android:visibility="visible" />
 
         </RelativeLayout>
