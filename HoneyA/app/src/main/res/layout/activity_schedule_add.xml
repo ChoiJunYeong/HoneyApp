@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:background="@color/pure"
             android:drawablePadding="4dp"
-            android:drawableStart="@drawable/ic_menu_add"
+            android:drawableStart="@drawable/add_button"
             android:onClick="addTime"
             android:text="Add time" />
 

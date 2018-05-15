@@ -32,7 +32,7 @@
                     android:id="@+id/mark1"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    app:srcCompat="@drawable/ic_menu_send" />
+                    app:srcCompat="@drawable/ic_circle1" />
 
                 <ImageView
                     android:id="@+id/icon1"
@@ -41,7 +41,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginTop="5dp"
                     android:layout_toEndOf="@+id/mark1"
-                    app:srcCompat="@drawable/ic_menu_share" />
+                    app:srcCompat="@drawable/message" />
 
                 <TextView
                     android:id="@+id/dest1"
@@ -78,7 +78,7 @@
                     android:id="@+id/mark2"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    app:srcCompat="@drawable/ic_menu_send" />
+                    app:srcCompat="@drawable/ic_circle2" />
 
                 <ImageView
                     android:id="@+id/icon2"
@@ -87,7 +87,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginTop="5dp"
                     android:layout_toEndOf="@+id/mark2"
-                    app:srcCompat="@drawable/ic_menu_share" />
+                    app:srcCompat="@drawable/card" />
 
                 <TextView
                     android:id="@+id/dest2"
@@ -125,7 +125,7 @@
                     android:id="@+id/mark3"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    app:srcCompat="@drawable/ic_menu_send" />
+                    app:srcCompat="@drawable/ic_circle3" />
 
                 <ImageView
                     android:id="@+id/icon3"
@@ -134,7 +134,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginTop="5dp"
                     android:layout_toEndOf="@+id/mark3"
-                    app:srcCompat="@drawable/ic_menu_share" />
+                    app:srcCompat="@drawable/document" />
 
                 <TextView
                     android:id="@+id/dest3"

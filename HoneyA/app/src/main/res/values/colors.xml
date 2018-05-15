@@ -10,4 +10,7 @@
     <color name="pure">#00FFFFFF</color>
     <color name="Honey">#FFFF22</color>
     <color name="OrangeHoney">#FFCC00</color>
+    <color name="time1">#89DBCB</color>
+    <color name="time2">#ED9385</color>
+    <color name="time3">#C9A3D9</color>
 </resources>

@@ -8,7 +8,7 @@
         android:id="@+id/folder_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:srcCompat="@drawable/ic_folder_24dp" />
+        app:srcCompat="@drawable/folder_black_line" />
 
     <TextView
         android:id="@+id/folder_name"

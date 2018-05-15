@@ -10,43 +10,47 @@
     tools:openDrawer="start">
 
 
-    <ScrollView
-        android:id="@+id/ScrollTimeTable"
+    <LinearLayout
+        android:id="@+id/scheduleParentLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:orientation="vertical">
 
-        <RelativeLayout
-            android:id="@+id/scheduleParentLayout"
+        <TableLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <com.example.honeya.honeya.UnscrollableGridView
-                android:id="@+id/schedule"
+            <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_alignParentEnd="true"
-                android:numColumns="8">
+                android:layout_height="match_parent" />
 
-            </com.example.honeya.honeya.UnscrollableGridView>
-        </RelativeLayout>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-    </ScrollView>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </TableLayout>
+
+        <GridView
+            android:id="@+id/schedule"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:numColumns="8">
+
+        </GridView>
+    </LinearLayout>
 
     <RelativeLayout
         android:id="@+id/folder_parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageButton
-            android:id="@+id/up_down_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/folder_icon"
-            android:layout_alignParentStart="true"
-            android:onClick="folderShow"
-            app:srcCompat="@android:drawable/arrow_down_float" />
 
         <GridView
             android:id="@+id/folder_icon"
@@ -54,9 +58,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
-            android:background="@drawable/border"
+            android:background="@drawable/border_gray"
             android:gravity="bottom"
-            android:numColumns="4">
+            android:numColumns="5">
 
         </GridView>
     </RelativeLayout>

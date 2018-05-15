@@ -20,9 +20,18 @@ public class ScheduleItemView extends LinearLayout {
         super(context,attrs);
         init(context);
     }
+    public ScheduleItemView(Context context,int layout){
+        super(context);
+        init(context,layout);
+    }
     public void init(Context context){
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.schedule_item,this,true);
+        textView = (TextView) findViewById(R.id.text_schedule);
+    }
+    public void init(Context context,int layout){
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(layout,this,true);
         textView = (TextView) findViewById(R.id.text_schedule);
     }
     public void setTag(String text){

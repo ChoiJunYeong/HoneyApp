@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
@@ -19,8 +20,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -54,7 +57,7 @@ import java.util.Set;
 import static com.example.honeya.honeya.Utils.*;
 
 public class SchedulerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener  {
-    UnscrollableGridView schedule;
+    GridView schedule;
     SchedulerAdapter adapter;
     FolderIconAdapter iconAdapter;
     ArrayList<String> deleteFiles = new ArrayList<>();
@@ -65,7 +68,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     ActionBarDrawerToggle toggle;
     Utils utils = new Utils();
     DialogInterface dialogInterface;
-    static int week = 8;
+    static int week = 7;
     private Menu menu;
     RelativeLayout currentLayout;
     String dest_id;
@@ -83,6 +86,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                 Toast.makeText(this, "Error" + myDir.toString(), Toast.LENGTH_SHORT).show();
         //action bar setting
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_scheduler);
+        toolbar.setTitle("Timetable");
         setSupportActionBar(toolbar);
         //load scheduler
         scheduleHashMap = getScheduleList();
@@ -146,7 +150,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
                         scheduleHashMap = new HashMap<>();
                     else
                         scheduleHashMap.putAll(newHashMap);
-                    RelativeLayout rootlayout = findViewById(R.id.scheduleParentLayout);
+                    LinearLayout rootlayout = findViewById(R.id.scheduleParentLayout);
                     for (int i = 1; i < rootlayout.getChildCount(); i++) {
                         TextView textView = (TextView) rootlayout.getChildAt(i);
                         rootlayout.removeView(rootlayout.getChildAt(i));
@@ -235,7 +239,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     void createView(String view){
 
         //기존 레이아웃 컨텐츠를 삭제
-        RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
         scheduleParentLayout.setVisibility(View.INVISIBLE);
         LinearLayout otherviewLayout = findViewById(R.id.otherviewLayout);
         otherviewLayout.removeAllViews();
@@ -243,7 +247,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         gridView.setAdapter(null);
 
             /*변경하고 싶은 레이아웃의 파라미터 값을 가져 옴*/
-        RelativeLayout.LayoutParams plControl = (RelativeLayout.LayoutParams) otherviewLayout.getLayoutParams();
+        LinearLayout.LayoutParams plControl = (LinearLayout.LayoutParams) otherviewLayout.getLayoutParams();
 
             /*해당 margin값 변경*/
         plControl.topMargin = utils.getStatusBarSize(this);
@@ -416,7 +420,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     //make hashMap from intent data
     public HashMap<Integer[],String[]> getHashMap(Intent intent,boolean toAdded) {
-        int[] colors = {Color.BLUE, Color.RED, Color.YELLOW, Color.CYAN, Color.GREEN, Color.MAGENTA}; //color list of scheduler
+        int[] colors = {R.color.time1, R.color.time2,R.color.time3 , Color.CYAN, Color.GREEN, Color.MAGENTA}; //color list of scheduler
         HashMap<Integer[], String[]> result = new HashMap<Integer[], String[]>();
 
         int hashmapsize;
@@ -508,19 +512,24 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     //시간표를 보여주는 TextView를 적절한 위치에 생성한다.
     public void setScheduleTextView(HashMap<Integer[],String[]> newSchedule){
+        LinearLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
+        scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
+        //get display width and height
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        float HEIGHT = displayMetrics.heightPixels;
+        float WIDTH = displayMetrics.widthPixels;
+        //get folderview height
+        GridView gridView = findViewById(R.id.folder_icon);
+        View folderIconItem =  iconAdapter.getView(0, null, gridView);
+        folderIconItem.measure(0,0);
+        //set height and width of each scheduler cell
+        WIDTH = WIDTH/7;
+        float HEIGHT_HOUR = (HEIGHT-utils.getStatusBarSize(this)- folderIconItem.getMeasuredHeight()*2)/10;
+        float HEIGHT_MIN = HEIGHT_HOUR/4;
+
         if(newSchedule==null)
             return;
-
-        RelativeLayout scheduleParentLayout = (RelativeLayout) findViewById(R.id.scheduleParentLayout);
-        scheduleParentLayout.setPadding(0,utils.getStatusBarSize(this),0,0);
-
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        float WIDTH = size.x/8;
-        float HEIGHT_HOUR = 150;
-        float HEIGHT_MIN = 150/4;
-
 
 
         for(Integer[] newScheduleUnit : newSchedule.keySet() ){
@@ -560,19 +569,22 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     //grid 형식의 스케쥴러
     public void loadScheduler(){
         //show textview
-        RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
         int size = scheduleParentLayout.getChildCount();
         for(int i=1;i<size;i++){
             TextView textView =(TextView) scheduleParentLayout.getChildAt(i);
             textView.setVisibility(View.VISIBLE);
         }
         //load schedule
-        schedule = (UnscrollableGridView) findViewById(R.id.schedule);
+        schedule = (GridView) findViewById(R.id.schedule);
         schedule.setNumColumns(week);
         adapter = new SchedulerAdapter();
-        for(int i=0;i<(21-9+2)*week+1*week;i++) {
+        for(int i=0;i<week;i++) {
+            ScheduleWeekItem item = new ScheduleWeekItem();
+            adapter.addItem(item);
+        }
+        for(int i=0;i<10*week;i++) {
             ScheduleItem item = new ScheduleItem();
-            item.setTag(Integer.toString(i));
             adapter.addItem(item);
         }
         schedule.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -582,7 +594,6 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         });
 
         schedule.setAdapter(adapter);
-
         loadFolders();
     }
     //folder list using gridview custom adapter
@@ -600,7 +611,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             iconAdapter.addItem(folderIconItem);
         }
         //make last item blank
-        for(int i=0;i<4-iconAdapter.getCount()%4;i++){
+        for(int i=0;i<5-iconAdapter.getCount()%5;i++){
             FolderIconItem folderIconItem = new FolderIconItem();
             folderIconItem.setTag("");
             iconAdapter.addItem(folderIconItem);
@@ -621,29 +632,11 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         if(adapter.getCount() != 0) {
             View folderIconItem =  iconAdapter.getView(0, null, gridView);
             folderIconItem.measure(0,0);
-            params.height = folderIconItem.getMeasuredHeight() * 2;
+            params.height = folderIconItem.getMeasuredHeight()*2;
         }
         gridView.setLayoutParams(params);
     }
-    //folders layout show or not
-    public void folderShow(View view) {
-        //set animation
-        final GridView gridView = findViewById(R.id.folder_icon);
-        final float moveScale = gridView.getHeight() | -1 * gridView.getPaddingBottom();
-        //move view and change icon
-        final ImageButton imageButton = (ImageButton) view;
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) gridView.getLayoutParams();
-        if (gridView.getPaddingBottom() == -(int) moveScale) {
-            params.height = (int) moveScale;
-            gridView.setPadding(0, 0, 0, 0);
-            imageButton.setImageDrawable(getDrawable(R.drawable.arrow_down_float));
-        } else {
-            params.height = 0;
-            gridView.setPadding(0, 0, 0, -(int) moveScale);
-            imageButton.setImageDrawable(getDrawable(R.drawable.arrow_up_float));
-        }
-        gridView.setLayoutParams(params);
-    }
+
     //선택한 스케쥴의 폴더를 보여줌
     public void showItem(String folderName){
         Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
@@ -657,7 +650,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     //스케쥴 쓰레기통 버튼을 누르면 활성화
     public void onDeleteSchedule(){
-        RelativeLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout scheduleParentLayout = findViewById(R.id.scheduleParentLayout);
         //modify actionbar
         TextView cancle = findViewById(R.id.CancleDelete);
         cancle.setVisibility(View.VISIBLE);
@@ -712,7 +705,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         deleteconfirm.setVisibility(View.INVISIBLE);
         menu.setGroupVisible(R.id.default_group,true);
         //clear select list
-        RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         for(int i=1;i<relativeLayout.getChildCount();i++){
             TextView textView = (TextView) relativeLayout.getChildAt(i);
             if(deleteFiles.contains(textView.getText().toString())){
@@ -735,7 +728,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         confirm.setVisibility(View.VISIBLE);
         menu.setGroupVisible(R.id.default_group,false);
         //set onclick listener for schedule
-        RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         for(int i=1;i<relativeLayout.getChildCount();i++){
             TextView textView = (TextView) relativeLayout.getChildAt(i);
             textView.setOnClickListener(new View.OnClickListener() {
@@ -763,7 +756,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     }
     public void setMoveMode(final String[] images){
         //set onclick listener for times
-        RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+        LinearLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
         int size = relativeLayout.getChildCount();
         for(int i=1;i<size;i++){
             TextView scheduleView = (TextView) relativeLayout.getChildAt(i);
@@ -818,7 +811,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
             public void onClick(DialogInterface dialogInterface, int i) {
                 onConfirmDeleteResult();
                 //clear schedule
-                RelativeLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
+                LinearLayout relativeLayout = findViewById(R.id.scheduleParentLayout);
                 for(int j=1;j<relativeLayout.getChildCount();j++) {
                     TextView textView = (TextView)relativeLayout.getChildAt(j);
                     if(deleteFiles.contains(textView.getText().toString())) {
@@ -888,12 +881,16 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
     //adapter for grid
     public class SchedulerAdapter extends BaseAdapter {
         ArrayList<ScheduleItem> items = new ArrayList<ScheduleItem>();
-        String[] days={" ","월","화","수","목","금","토","일"};
+        ArrayList<ScheduleWeekItem> weekitems = new ArrayList<ScheduleWeekItem>();
+        String[] days={" ","MON","TUE","WED","THU","FRI","SAT"};
         @Override
-        public int getCount(){return items.size();}
+        public int getCount(){return items.size()+weekitems.size();}
         @Override
         public Object getItem(int arg){
-            return items.get(arg);
+            if(arg<week)
+                return weekitems.get(arg);
+            else
+                return items.get(arg-week);
         }
         @Override
         public long getItemId(int arg){
@@ -902,29 +899,42 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         public void addItem(ScheduleItem item){
             items.add(item);
         }
+        public void addItem(ScheduleWeekItem item){
+            weekitems.add(item);
+        }
         @Override
         public View getView(int position, View oldView, ViewGroup parent){
-            ScheduleItemView view = new ScheduleItemView(getApplicationContext());
-            ScheduleItem item = items.get(position);
-
-
             if(position<week){
+                ScheduleItemView view = new ScheduleItemView(getApplicationContext(),R.layout.schedule_week_item);
+                ScheduleWeekItem item = weekitems.get(position);
                 view.setTag(days[position]);
-            }
-            else if(position%week==0){
-                String time = Integer.toString(position/week) + "교시";
-                view.setTag(time);
-            }
-            else if(position>=week){
+                return view;
             }
             else{
-                view.setTag("else");
-            }
-            ViewGroup.LayoutParams param = parent.getLayoutParams();
-            param.height = 150;
-            view.setLayoutParams(param);
+                ScheduleItemView view = new ScheduleItemView(getApplicationContext());
+                ScheduleItem item = items.get(position-week);
+                if(position%7==0) {
+                    String time = Integer.toString(position / week) + "교시";
+                    view.setTag(time);
+                }
+                ViewGroup.LayoutParams param = parent.getLayoutParams();
 
-            return view;
+                //get display height
+                DisplayMetrics displayMetrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                int HEIGHT = displayMetrics.heightPixels;
+                //get folderview height
+                GridView gridView = findViewById(R.id.folder_icon);
+                View folderIconItem =  iconAdapter.getView(0, null, gridView);
+                folderIconItem.measure(0,0);
+                //set height and width of each scheduler cell
+                int HEIGHT_HOUR = (HEIGHT-utils.getStatusBarSize(getApplicationContext())- folderIconItem.getMeasuredHeight()*2-100)/10;
+                param.height = (int)HEIGHT_HOUR;
+                view.setLayoutParams(param);
+                return view;
+            }
+
+
         }
         @Override
         public boolean isEnabled(int i){
@@ -954,6 +964,7 @@ public class SchedulerActivity extends AppCompatActivity implements NavigationVi
         public View getView(int position, View oldView, ViewGroup parent){
 
             FolderIconItemView view = new FolderIconItemView(getApplicationContext());
+            view.setGravity(Gravity.CENTER);
             FolderIconItem item = items.get(position);
             view.setTag(item.getTag());
             if(!item.getTag().equals(""))

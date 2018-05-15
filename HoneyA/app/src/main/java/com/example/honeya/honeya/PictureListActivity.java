@@ -44,7 +44,6 @@ public class PictureListActivity extends AppCompatActivity {
         adapter.setItems(result);
 
         listView.setAdapter(adapter);
-        listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -86,10 +85,6 @@ public class PictureListActivity extends AppCompatActivity {
 
             pictureCount++;
         }
-
-        textView.setText(pictureCount + " 개");
-        Log.d("MainActivity", "Picture count : " + pictureCount);
-
         for (ImageInfo info : result) {
             Log.d("MainActivity", info.toString());
         }

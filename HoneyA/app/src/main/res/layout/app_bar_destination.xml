@@ -51,10 +51,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/white"
-        app:backgroundTint="@color/OrangeHoney"
-        app:layout_anchor="@+id/include"
-        app:layout_anchorGravity="right|bottom"
-        app:srcCompat="@android:drawable/ic_menu_add" />
+        app:fabSize="normal"
+        android:scaleType="center"
+        app:srcCompat="@drawable/add_button" />
 
 </android.support.design.widget.CoordinatorLayout>

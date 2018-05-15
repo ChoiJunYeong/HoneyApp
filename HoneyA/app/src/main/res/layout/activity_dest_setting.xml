@@ -21,7 +21,9 @@
                 android:id="@+id/Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@mipmap/ic_launcher_round" />
+                android:layout_alignBottom="@+id/textView4"
+                android:layout_toStartOf="@+id/textView4"
+                app:srcCompat="@drawable/profile_default" />
 
             <ImageView
                 android:id="@+id/sIcon"

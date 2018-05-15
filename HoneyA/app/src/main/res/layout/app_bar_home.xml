@@ -48,8 +48,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:backgroundTint="@color/OrangeHoney"
-        android:tint="@color/white"
-        app:srcCompat="@android:drawable/ic_menu_camera" />
+        app:fabSize="normal"
+        android:scaleType="center"
+        android:src="@drawable/camera"/>
 
 </android.support.design.widget.CoordinatorLayout>

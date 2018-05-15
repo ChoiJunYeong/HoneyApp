@@ -37,7 +37,7 @@ public class FolderIconItemView extends LinearLayout {
         textView.setText(text);
     }
     public void setImageView(){
-        imageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_folder_24dp));
+        imageView.setImageDrawable(getResources().getDrawable(R.drawable.folder_black_line));
     }
     public void setImageView(Drawable drawableimage){
         imageView.setImageDrawable(drawableimage);
